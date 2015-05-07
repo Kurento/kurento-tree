@@ -19,7 +19,7 @@ public class BasicTree {
 
 		Kms rootKms = new Kms("Root Kms");
 		Pipeline pipeline = rootKms.createPipeline();
-		WebRtc master = pipeline.createWebRtc();
+		WebRtc master = pipeline.createWebRtc(null);
 		List<Plumber> rootPlumbers = new ArrayList<>();
 		for (int i = 0; i < numLeafKmss; i++) {
 			Plumber plumber = pipeline.createPlumber();
@@ -40,7 +40,7 @@ public class BasicTree {
 			rootPlumbers.get(i).link(leafPlumber);
 
 			for (int j = 0; j < numViewersPerKms; j++) {
-				WebRtc webRtc = leafPipeline.createWebRtc();
+				WebRtc webRtc = leafPipeline.createWebRtc(null);
 				leafPlumber.connect(webRtc);
 			}
 		}

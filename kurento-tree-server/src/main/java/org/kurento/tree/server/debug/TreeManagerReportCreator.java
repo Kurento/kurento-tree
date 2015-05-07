@@ -9,6 +9,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
+import org.kurento.client.IceCandidate;
+import org.kurento.jsonrpc.Session;
 import org.kurento.tree.client.TreeEndpoint;
 import org.kurento.tree.client.TreeException;
 import org.kurento.tree.server.kmsmanager.KmsManager;
@@ -106,9 +108,9 @@ public class TreeManagerReportCreator implements TreeManager {
 	}
 
 	@Override
-	public String setTreeSource(String treeId, String sdpOffer)
+	public String setTreeSource(Session session, String treeId, String sdpOffer)
 			throws TreeException {
-		String answerSdp = treeManager.setTreeSource(treeId, sdpOffer);
+		String answerSdp = treeManager.setTreeSource(session, treeId, sdpOffer);
 		includeOperation("setTreeSource(" + treeId + "," + sdpOffer + ") -> "
 				+ answerSdp);
 		includeTreeManagerSnapshot();
@@ -123,9 +125,11 @@ public class TreeManagerReportCreator implements TreeManager {
 	}
 
 	@Override
-	public TreeEndpoint addTreeSink(String treeId, String sdpOffer)
-			throws TreeException {
-		TreeEndpoint endpoint = treeManager.addTreeSink(treeId, sdpOffer);
+	public TreeEndpoint addTreeSink(Session session, String treeId,
+			String sdpOffer)
+					throws TreeException {
+		TreeEndpoint endpoint = treeManager.addTreeSink(session, treeId,
+				sdpOffer);
 		includeOperation("addTreeSink(" + treeId + "," + sdpOffer + ") -> "
 				+ "sdp = " + endpoint.getSdp() + " , sinkId = "
 				+ endpoint.getId());
@@ -154,6 +158,23 @@ public class TreeManagerReportCreator implements TreeManager {
 	public void createTree(String treeId) throws TreeException {
 		treeManager.createTree(treeId);
 		includeOperation("createTree(" + treeId + ")");
+		includeTreeManagerSnapshot();
+	}
+
+	@Override
+	public void addSinkIceCandidate(String treeId, String sinkId,
+			IceCandidate iceCandidate) {
+		treeManager.addSinkIceCandidate(treeId, sinkId, iceCandidate);
+		includeOperation("addSinkIceCandidate(" + treeId + "," + sinkId + ","
+				+ iceCandidate.getCandidate() + ")");
+		includeTreeManagerSnapshot();
+	}
+
+	@Override
+	public void addTreeIceCandidate(String treeId, IceCandidate iceCandidate) {
+		treeManager.addTreeIceCandidate(treeId, iceCandidate);
+		includeOperation("addTreeIceCandidate(" + treeId + ","
+				+ iceCandidate.getCandidate() + ")");
 		includeTreeManagerSnapshot();
 	}
 

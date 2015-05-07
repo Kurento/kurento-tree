@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.kurento.tree.server.app.TreeElementSession;
+
 import com.google.common.collect.Iterables;
 
 public class Pipeline extends KurentoObj {
@@ -20,11 +22,11 @@ public class Pipeline extends KurentoObj {
 		return kms;
 	}
 
-	public WebRtc createWebRtc() {
+	public WebRtc createWebRtc(TreeElementSession session) {
 
 		checkReleased();
 
-		WebRtc webRtc = newWebRtc();
+		WebRtc webRtc = newWebRtc(session);
 		webRtcs.add(webRtc);
 		return webRtc;
 	}
@@ -71,7 +73,7 @@ public class Pipeline extends KurentoObj {
 		return new Plumber[] { sourcePipelinePlumber, sinkPipelinePlumber };
 	}
 
-	protected WebRtc newWebRtc() {
+	protected WebRtc newWebRtc(TreeElementSession session) {
 
 		checkReleased();
 

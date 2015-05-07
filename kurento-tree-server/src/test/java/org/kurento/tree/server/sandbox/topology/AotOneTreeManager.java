@@ -18,12 +18,12 @@ public class AotOneTreeManager {
 		KmsTopologyGrapher.showTopologyGraphic(kmsManager);
 
 		String treeId = aot.createTree();
-		aot.setTreeSource(treeId, "XXX");
+		aot.setTreeSource(null, treeId, "XXX");
 
 		KmsTopologyGrapher.showTopologyGraphic(kmsManager);
 
-		aot.addTreeSink(treeId, "JJJ");
-		aot.addTreeSink(treeId, "FFF");
+		aot.addTreeSink(null, treeId, "JJJ");
+		aot.addTreeSink(null, treeId, "FFF");
 
 		KmsTopologyGrapher.showTopologyGraphic(kmsManager);
 	}

@@ -17,13 +17,13 @@ public class AotOneTreeManagerSvg {
 				.createSvgTopologyGrapher(kmsManager));
 
 		String treeId = aot.createTree();
-		aot.setTreeSource(treeId, "XXX");
+		aot.setTreeSource(null, treeId, "XXX");
 
 		System.out.println(KmsTopologyGrapher
 				.createSvgTopologyGrapher(kmsManager));
 
-		aot.addTreeSink(treeId, "JJJ");
-		aot.addTreeSink(treeId, "FFF");
+		aot.addTreeSink(null, treeId, "JJJ");
+		aot.addTreeSink(null, treeId, "FFF");
 
 		System.out.println(KmsTopologyGrapher
 				.createSvgTopologyGrapher(kmsManager));

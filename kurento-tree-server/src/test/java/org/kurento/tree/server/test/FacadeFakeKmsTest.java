@@ -20,10 +20,10 @@ public class FacadeFakeKmsTest {
 
 		Kms kms = new Kms();
 		Pipeline pipeline = kms.createPipeline();
-		WebRtc master = pipeline.createWebRtc();
+		WebRtc master = pipeline.createWebRtc(null);
 
 		for (int i = 0; i < 3; i++) {
-			WebRtc viewer = pipeline.createWebRtc();
+			WebRtc viewer = pipeline.createWebRtc(null);
 			master.connect(viewer);
 		}
 

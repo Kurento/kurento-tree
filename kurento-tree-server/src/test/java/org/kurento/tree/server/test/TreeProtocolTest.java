@@ -1,7 +1,7 @@
 package org.kurento.tree.server.test;
 
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.doThrow;
@@ -23,14 +23,14 @@ import org.kurento.tree.server.treemanager.TreeManager;
 public class TreeProtocolTest {
 
 	private TreeManager treeMgr;
+	private JsonRpcClientLocal localClient;
 	private KurentoTreeClient client;
 
 	@Before
 	public void init() {
-
 		treeMgr = mock(TreeManager.class);
-		client = new KurentoTreeClient(new JsonRpcClientLocal(
-				new ClientsJsonRpcHandler(treeMgr)));
+		localClient = new JsonRpcClientLocal(new ClientsJsonRpcHandler(treeMgr));
+		client = new KurentoTreeClient(localClient);
 	}
 
 	@Test
@@ -50,7 +50,7 @@ public class TreeProtocolTest {
 	public void testCreateTreeWithCollision() throws IOException, TreeException {
 
 		doThrow(new TreeException("message")).when(treeMgr)
-				.createTree("TreeId");
+		.createTree("TreeId");
 
 		try {
 			client.createTree("TreeId");
@@ -63,7 +63,9 @@ public class TreeProtocolTest {
 	@Test
 	public void testSetTreeSource() throws IOException, TreeException {
 
-		when(treeMgr.setTreeSource("TreeId", "sdpOffer")).thenReturn(
+		when(
+				treeMgr.setTreeSource(localClient.getSession(), "TreeId",
+						"sdpOffer")).thenReturn(
 				"sdpAnswer");
 
 		assertThat(client.setTreeSource("TreeId", "sdpOffer"), is("sdpAnswer"));
@@ -71,9 +73,10 @@ public class TreeProtocolTest {
 
 	@Test
 	public void testAddTreeSink() throws IOException, TreeException {
-
-		when(treeMgr.addTreeSink("TreeId", "sdpOffer")).thenReturn(
-				new TreeEndpoint("SinkId", "sdpAnswer"));
+		when(
+				treeMgr.addTreeSink(localClient.getSession(), "TreeId",
+						"sdpOffer")).thenReturn(
+								new TreeEndpoint("SinkId", "sdpAnswer"));
 
 		assertThat(client.addTreeSink("TreeId", "sdpOffer"),
 				is(new TreeEndpoint("SinkId", "sdpAnswer")));

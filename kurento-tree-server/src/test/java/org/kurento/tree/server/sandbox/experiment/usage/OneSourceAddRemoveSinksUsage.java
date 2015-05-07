@@ -31,7 +31,7 @@ public class OneSourceAddRemoveSinksUsage extends UsageSimulation {
 	public void useTreeManager(TreeManager treeManager) {
 
 		String treeId = treeManager.createTree();
-		treeManager.setTreeSource(treeId, "fakeSdp");
+		treeManager.setTreeSource(null, treeId, "fakeSdp");
 
 		numCurrentTreeOperations = 0;
 
@@ -40,7 +40,7 @@ public class OneSourceAddRemoveSinksUsage extends UsageSimulation {
 			while (true) {
 
 				for (int i = 0; i < numSinksToAdd; i++) {
-					sinks.add(treeManager.addTreeSink(treeId, "fakeSdp")
+					sinks.add(treeManager.addTreeSink(null, treeId, "fakeSdp")
 							.getId());
 					updateTreeOperations();
 				}

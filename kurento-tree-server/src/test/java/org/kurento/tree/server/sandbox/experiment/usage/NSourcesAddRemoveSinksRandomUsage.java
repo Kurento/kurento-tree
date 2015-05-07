@@ -30,7 +30,7 @@ public class NSourcesAddRemoveSinksRandomUsage extends UsageSimulation {
 		for (int numTree = 0; numTree < numTrees; numTree++) {
 			String treeId = getTreeId(numTree);
 			treeManager.createTree(treeId);
-			treeManager.setTreeSource(treeId, "XXX");
+			treeManager.setTreeSource(null, treeId, "XXX");
 		}
 
 		Random r = new Random(randomSeed);
@@ -42,8 +42,8 @@ public class NSourcesAddRemoveSinksRandomUsage extends UsageSimulation {
 				if (r.nextDouble() < addProb) {
 					int numTree = r.nextInt(numTrees);
 					String treeId = getTreeId(numTree);
-					String sinkId = treeManager.addTreeSink(treeId, "fakeSdp")
-							.getId();
+					String sinkId = treeManager.addTreeSink(null, treeId,
+							"fakeSdp").getId();
 					sinks.add(treeId + "|" + sinkId);
 				} else {
 					if (!sinks.isEmpty()) {

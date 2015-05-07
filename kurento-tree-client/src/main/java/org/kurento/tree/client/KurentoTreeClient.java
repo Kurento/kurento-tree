@@ -32,6 +32,7 @@ public class KurentoTreeClient {
 
 	public KurentoTreeClient(JsonRpcClient client) {
 		this.client = client;
+		this.client.setServerRequestHandler(new ServerJsonRpcHandler());
 	}
 
 	public String createTree() throws IOException {
@@ -80,7 +81,7 @@ public class KurentoTreeClient {
 	}
 
 	public void removeTreeSource(String treeId) throws TreeException,
-			IOException {
+	IOException {
 
 		JsonObject params = new JsonObject();
 		params.addProperty(TREE_ID, treeId);
@@ -108,7 +109,7 @@ public class KurentoTreeClient {
 
 			return new TreeEndpoint(getResponseProperty(result, ANSWER_SDP,
 					String.class), getResponseProperty(result, SINK_ID,
-					String.class));
+							String.class));
 
 		} catch (JsonRpcErrorException e) {
 			processException(e);
@@ -147,7 +148,7 @@ public class KurentoTreeClient {
 		if (!(result instanceof JsonObject)) {
 			throw new JsonRpcException(
 					"Invalid response format. The response '" + result
-							+ "' should be a Json object");
+					+ "' should be a Json object");
 		}
 
 		JsonElement paramValue = ((JsonObject) result).get(property);

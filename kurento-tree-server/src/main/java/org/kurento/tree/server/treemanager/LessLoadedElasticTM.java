@@ -6,9 +6,12 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.kurento.client.IceCandidate;
 import org.kurento.commons.exception.KurentoException;
+import org.kurento.jsonrpc.Session;
 import org.kurento.tree.client.TreeEndpoint;
 import org.kurento.tree.client.TreeException;
+import org.kurento.tree.server.app.TreeElementSession;
 import org.kurento.tree.server.kms.Kms;
 import org.kurento.tree.server.kms.Pipeline;
 import org.kurento.tree.server.kms.Plumber;
@@ -55,7 +58,8 @@ public class LessLoadedElasticTM extends AbstractNTreeTM {
 
 		private int numSinks = 0;
 
-		public LessLoadedTreeInfo(String treeId, KmsManager kmsManager) {
+		public LessLoadedTreeInfo(String treeId,
+				KmsManager kmsManager) {
 
 			this.treeId = treeId;
 			this.kmsManager = kmsManager;
@@ -68,6 +72,7 @@ public class LessLoadedElasticTM extends AbstractNTreeTM {
 			sourceKms = kmsManager.getKmss().get(0);
 		}
 
+		@Override
 		public void release() {
 			source.release();
 			for (WebRtc webRtc : sinks.values()) {
@@ -75,7 +80,8 @@ public class LessLoadedElasticTM extends AbstractNTreeTM {
 			}
 		}
 
-		public String setTreeSource(String offerSdp) {
+		@Override
+		public String setTreeSource(Session session, String offerSdp) {
 
 			if (source != null) {
 				removeTreeSource();
@@ -85,17 +91,20 @@ public class LessLoadedElasticTM extends AbstractNTreeTM {
 				sourcePipeline = sourceKms.createPipeline();
 				ownPipelineByKms.put(sourceKms, sourcePipeline);
 			}
-
-			source = sourcePipeline.createWebRtc();
+			source = sourcePipeline.createWebRtc(new TreeElementSession(
+					session, treeId, null));
 			return source.processSdpOffer(offerSdp);
+			// FIXME is source required to start gathering candidates??
 		}
 
+		@Override
 		public void removeTreeSource() {
 			source.release();
 			source = null;
 		}
 
-		public TreeEndpoint addTreeSink(String sdpOffer) {
+		@Override
+		public TreeEndpoint addTreeSink(Session session, String sdpOffer) {
 
 			List<KmsLoad> kmss = kmsManager.getKmssSortedByLoad();
 
@@ -107,11 +116,12 @@ public class LessLoadedElasticTM extends AbstractNTreeTM {
 			Pipeline pipeline = getOrCreatePipeline(selectedKms);
 
 			if (pipeline.getKms().allowMoreElements()) {
-
-				WebRtc webRtc = pipeline.createWebRtc();
+				String id = UUID.randomUUID().toString();
+				WebRtc webRtc = pipeline.createWebRtc(new TreeElementSession(
+						session, treeId, id));
 				pipeline.getPlumbers().get(0).connect(webRtc);
 				String sdpAnswer = webRtc.processSdpOffer(sdpOffer);
-				String id = UUID.randomUUID().toString();
+				webRtc.gatherCandidates();
 				webRtcsById.put(id, webRtc);
 				webRtc.setLabel("Sink " + id + ")");
 				return new TreeEndpoint(sdpAnswer, id);
@@ -142,6 +152,7 @@ public class LessLoadedElasticTM extends AbstractNTreeTM {
 			return pipeline;
 		}
 
+		@Override
 		public void removeTreeSink(String sinkId) {
 			WebRtc webRtc = webRtcsById.get(sinkId);
 			Plumber plumber = (Plumber) webRtc.getSource();
@@ -153,6 +164,16 @@ public class LessLoadedElasticTM extends AbstractNTreeTM {
 				pipeline.release();
 				remotePlumber.release();
 			}
+		}
+
+		@Override
+		public void addSinkIceCandidate(String sinkId, IceCandidate iceCandidate) {
+			webRtcsById.get(sinkId).addIceCandidate(iceCandidate);
+		}
+
+		@Override
+		public void addTreeIceCandidate(IceCandidate iceCandidate) {
+			source.addIceCandidate(iceCandidate);
 		}
 	}
 

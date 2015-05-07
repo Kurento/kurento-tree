@@ -5,8 +5,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.kurento.client.IceCandidate;
+import org.kurento.jsonrpc.Session;
 import org.kurento.tree.client.TreeEndpoint;
 import org.kurento.tree.client.TreeException;
+import org.kurento.tree.server.app.TreeElementSession;
 import org.kurento.tree.server.kms.Kms;
 import org.kurento.tree.server.kms.Pipeline;
 import org.kurento.tree.server.kms.Plumber;
@@ -101,8 +104,9 @@ public class LexicalFixedTM extends AbstractOneTreeTM {
 	}
 
 	@Override
-	public synchronized String setTreeSource(String treeId, String offerSdp)
-			throws TreeException {
+	public synchronized String setTreeSource(Session session, String treeId,
+			String offerSdp)
+					throws TreeException {
 
 		checkTreeId(treeId);
 
@@ -110,7 +114,8 @@ public class LexicalFixedTM extends AbstractOneTreeTM {
 			removeTreeSource(treeId);
 		}
 
-		sourceWebRtc = rootPipeline.createWebRtc();
+		sourceWebRtc = rootPipeline.createWebRtc(new TreeElementSession(
+				session, treeId, null));
 
 		if (!oneKms) {
 			for (Plumber plumber : this.rootPlumbers) {
@@ -132,8 +137,9 @@ public class LexicalFixedTM extends AbstractOneTreeTM {
 	}
 
 	@Override
-	public synchronized TreeEndpoint addTreeSink(String treeId, String sdpOffer)
-			throws TreeException {
+	public synchronized TreeEndpoint addTreeSink(Session session,
+			String treeId, String sdpOffer)
+					throws TreeException {
 
 		checkTreeId(treeId);
 
@@ -141,11 +147,14 @@ public class LexicalFixedTM extends AbstractOneTreeTM {
 
 		if (oneKms) {
 			if (rootPipeline.getWebRtcs().size() < maxViewersPerPipeline) {
-				WebRtc webRtc = rootPipeline.createWebRtc();
+				String id = "r_" + (rootPipeline.getWebRtcs().size() - 1);
+				WebRtc webRtc = rootPipeline
+						.createWebRtc(new TreeElementSession(session, treeId,
+								id));
 				sourceWebRtc.connect(webRtc);
 				String sdpAnswer = webRtc.processSdpOffer(sdpOffer);
-				result = new TreeEndpoint(sdpAnswer, "r_"
-						+ (rootPipeline.getWebRtcs().size() - 1));
+				webRtc.gatherCandidates();
+				result = new TreeEndpoint(sdpAnswer, id);
 			} else {
 				throw new TreeException("Max number of viewers reached");
 			}
@@ -153,11 +162,15 @@ public class LexicalFixedTM extends AbstractOneTreeTM {
 			int numPipeline = 0;
 			for (Pipeline pipeline : this.leafPipelines) {
 				if (pipeline.getWebRtcs().size() < maxViewersPerPipeline) {
-					WebRtc webRtc = pipeline.createWebRtc();
+					String id = numPipeline + "_"
+							+ (pipeline.getWebRtcs().size() - 1);
+					WebRtc webRtc = pipeline
+							.createWebRtc(new TreeElementSession(session,
+									treeId, id));
 					pipeline.getPlumbers().get(0).connect(webRtc);
 					String sdpAnswer = webRtc.processSdpOffer(sdpOffer);
-					result = new TreeEndpoint(sdpAnswer, numPipeline + "_"
-							+ (pipeline.getWebRtcs().size() - 1));
+					webRtc.gatherCandidates();
+					result = new TreeEndpoint(sdpAnswer, id);
 					break;
 				}
 				numPipeline++;
@@ -174,22 +187,36 @@ public class LexicalFixedTM extends AbstractOneTreeTM {
 	@Override
 	public synchronized void removeTreeSink(String treeId, String sinkId)
 			throws TreeException {
-
 		checkTreeId(treeId);
+		getSink(sinkId).disconnect();
+	}
 
+	@Override
+	public void addSinkIceCandidate(String treeId, String sinkId,
+			IceCandidate iceCandidate) {
+		checkTreeId(treeId);
+		getSink(sinkId).addIceCandidate(iceCandidate);
+	}
+
+	@Override
+	public void addTreeIceCandidate(String treeId, IceCandidate iceCandidate) {
+		checkTreeId(treeId);
+		if (sourceWebRtc != null)
+			sourceWebRtc.addIceCandidate(iceCandidate);
+	}
+
+	private WebRtc getSink(String sinkId) {
+		WebRtc sink;
 		String[] sinkIdTokens = sinkId.split("_");
-
 		if (sinkIdTokens[0].equals("r")) {
-
 			int numWebRtc = Integer.parseInt(sinkIdTokens[1]);
-			this.rootPipeline.getWebRtcs().get(numWebRtc).disconnect();
-
+			sink = this.rootPipeline.getWebRtcs().get(numWebRtc);
 		} else {
 			int numPipeline = Integer.parseInt(sinkIdTokens[0]);
 			int numWebRtc = Integer.parseInt(sinkIdTokens[1]);
-
-			this.leafPipelines.get(numPipeline).getWebRtcs().get(numWebRtc)
-					.disconnect();
+			sink = this.leafPipelines.get(numPipeline).getWebRtcs()
+					.get(numWebRtc);
 		}
+		return sink;
 	}
 }

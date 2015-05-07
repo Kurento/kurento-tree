@@ -1,5 +1,6 @@
 package org.kurento.tree.server.sandbox.experiment.framework;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,10 +57,10 @@ public abstract class Experiment {
 					simulation.useTreeManager(reportCreator);
 				} catch (TreeException e) {
 					System.out
-							.println("Reached maximum tree capacity in TreeManager: "
-									+ treeManager.getClass().getName()
-									+ " and UsageSimulation: "
-									+ simulation.getClass().getName());
+					.println("Reached maximum tree capacity in TreeManager: "
+							+ treeManager.getClass().getName()
+							+ " and UsageSimulation: "
+							+ simulation.getClass().getName());
 					System.out.println(e.getClass().getName() + ":"
 							+ e.getMessage());
 				}
@@ -67,8 +68,10 @@ public abstract class Experiment {
 		}
 
 		try {
-			String reportPath = "/home/mica/Data/Kurento/treereport.html";
-			reportCreator.createReport(reportPath);
+			String reportPath = System.getProperty("user.home")
+					+ "/Data/Kurento";
+			new File(reportPath).mkdirs();
+			reportCreator.createReport(reportPath + "/treereport.html");
 			System.out.println("Report created in: " + reportPath);
 		} catch (IOException e) {
 			e.printStackTrace();

@@ -27,14 +27,14 @@ public class AotOneTreeManagerReport {
 		aot = reportCreator;
 
 		String treeId = aot.createTree();
-		aot.setTreeSource(treeId, "XXX");
+		aot.setTreeSource(null, treeId, "XXX");
 
 		List<String> sinks = new ArrayList<String>();
 		try {
 			while (true) {
 
 				for (int i = 0; i < 5; i++) {
-					sinks.add(aot.addTreeSink(treeId, "fakeSdp").getId());
+					sinks.add(aot.addTreeSink(null, treeId, "fakeSdp").getId());
 				}
 
 				for (int i = 0; i < 2; i++) {

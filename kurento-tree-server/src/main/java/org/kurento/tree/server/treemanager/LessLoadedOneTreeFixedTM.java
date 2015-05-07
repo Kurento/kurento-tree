@@ -5,8 +5,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.kurento.client.IceCandidate;
+import org.kurento.jsonrpc.Session;
 import org.kurento.tree.client.TreeEndpoint;
 import org.kurento.tree.client.TreeException;
+import org.kurento.tree.server.app.TreeElementSession;
 import org.kurento.tree.server.kms.Kms;
 import org.kurento.tree.server.kms.Pipeline;
 import org.kurento.tree.server.kms.Plumber;
@@ -101,16 +104,17 @@ public class LessLoadedOneTreeFixedTM extends AbstractOneTreeTM {
 	}
 
 	@Override
-	public synchronized String setTreeSource(String treeId, String offerSdp)
-			throws TreeException {
+	public synchronized String setTreeSource(Session session, String treeId,
+			String offerSdp)
+					throws TreeException {
 
 		checkTreeId(treeId);
 
 		if (source != null) {
 			removeTreeSource(treeId);
 		}
-
-		source = sourcePipeline.createWebRtc();
+		source = sourcePipeline.createWebRtc(new TreeElementSession(session,
+				treeId, null));
 
 		if (!oneKms) {
 			for (Plumber plumber : this.sourcePlumbers) {
@@ -131,8 +135,9 @@ public class LessLoadedOneTreeFixedTM extends AbstractOneTreeTM {
 	}
 
 	@Override
-	public synchronized TreeEndpoint addTreeSink(String treeId, String sdpOffer)
-			throws TreeException {
+	public synchronized TreeEndpoint addTreeSink(Session session,
+			String treeId, String sdpOffer)
+					throws TreeException {
 
 		checkTreeId(treeId);
 
@@ -140,10 +145,13 @@ public class LessLoadedOneTreeFixedTM extends AbstractOneTreeTM {
 
 		if (oneKms) {
 			if (sourcePipeline.getKms().allowMoreElements()) {
-				WebRtc webRtc = sourcePipeline.createWebRtc();
+				String id = "r_" + (sourcePipeline.getWebRtcs().size() - 1);
+				WebRtc webRtc = sourcePipeline
+						.createWebRtc(new TreeElementSession(session, treeId,
+								id));
 				source.connect(webRtc);
 				String sdpAnswer = webRtc.processSdpOffer(sdpOffer);
-				String id = "r_" + (sourcePipeline.getWebRtcs().size() - 1);
+				webRtc.gatherCandidates();
 				webRtc.setLabel("Sink " + numSinks + " (WR " + id + ")");
 				result = new TreeEndpoint(sdpAnswer, id);
 			}
@@ -159,11 +167,13 @@ public class LessLoadedOneTreeFixedTM extends AbstractOneTreeTM {
 			}
 
 			if (pipeline.getKms().allowMoreElements()) {
-				WebRtc webRtc = pipeline.createWebRtc();
-				pipeline.getPlumbers().get(0).connect(webRtc);
-				String sdpAnswer = webRtc.processSdpOffer(sdpOffer);
 				String id = pipeline.getLabel() + "_"
 						+ (pipeline.getWebRtcs().size() - 1);
+				WebRtc webRtc = pipeline.createWebRtc(new TreeElementSession(
+						session, treeId, id));
+				pipeline.getPlumbers().get(0).connect(webRtc);
+				String sdpAnswer = webRtc.processSdpOffer(sdpOffer);
+				webRtc.gatherCandidates();
 				webRtc.setLabel("Sink " + numSinks + " (WR " + id + ")");
 				result = new TreeEndpoint(sdpAnswer, id);
 			} else {
@@ -200,6 +210,30 @@ public class LessLoadedOneTreeFixedTM extends AbstractOneTreeTM {
 					.get(numWebRtc);
 			webRtc.release();
 		}
+	}
+
+	@Override
+	public void addSinkIceCandidate(String treeId, String sinkId,
+			IceCandidate iceCandidate) {
+		checkTreeId(treeId);
+		String[] sinkIdTokens = sinkId.split("_");
+		if (sinkIdTokens[0].equals("r")) {
+			int numWebRtc = Integer.parseInt(sinkIdTokens[1]);
+			this.sourcePipeline.getWebRtcs().get(numWebRtc)
+					.addIceCandidate(iceCandidate);
+		} else {
+			int numPipeline = Integer.parseInt(sinkIdTokens[0]);
+			int numWebRtc = Integer.parseInt(sinkIdTokens[1]);
+			this.leafPipelines.get(numPipeline).getWebRtcs().get(numWebRtc)
+					.addIceCandidate(iceCandidate);
+		}
+	}
+
+	@Override
+	public void addTreeIceCandidate(String treeId, IceCandidate iceCandidate) {
+		checkTreeId(treeId);
+		if (source != null)
+			source.addIceCandidate(iceCandidate);
 	}
 
 }

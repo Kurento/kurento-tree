@@ -1,6 +1,9 @@
 package org.kurento.tree.server.app;
 
 import static org.kurento.tree.client.internal.ProtocolElements.ANSWER_SDP;
+import static org.kurento.tree.client.internal.ProtocolElements.ICE_CANDIDATE;
+import static org.kurento.tree.client.internal.ProtocolElements.ICE_SDP_MID;
+import static org.kurento.tree.client.internal.ProtocolElements.ICE_SDP_M_LINE_INDEX;
 import static org.kurento.tree.client.internal.ProtocolElements.OFFER_SDP;
 import static org.kurento.tree.client.internal.ProtocolElements.SINK_ID;
 import static org.kurento.tree.client.internal.ProtocolElements.TREE_ID;
@@ -8,8 +11,10 @@ import static org.kurento.tree.client.internal.ProtocolElements.TREE_ID;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import org.kurento.client.IceCandidate;
 import org.kurento.jsonrpc.DefaultJsonRpcHandler;
 import org.kurento.jsonrpc.JsonRpcErrorException;
+import org.kurento.jsonrpc.Session;
 import org.kurento.jsonrpc.Transaction;
 import org.kurento.jsonrpc.message.Request;
 import org.kurento.jsonrpc.message.Response;
@@ -42,11 +47,12 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		Response<JsonElement> response = null;
 
 		try {
-
 			Method method = this.getClass().getMethod(request.getMethod(),
-					Request.class);
+					Session.class, Request.class);
+			Session session = transaction.getSession();
 
-			response = (Response<JsonElement>) method.invoke(this, request);
+			response = (Response<JsonElement>) method.invoke(this, session,
+					request);
 
 			if (response != null) {
 				response.setId(request.getId());
@@ -72,8 +78,9 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 	}
 
-	public Response<JsonElement> createTree(Request<JsonObject> request)
-			throws TreeException {
+	public Response<JsonElement> createTree(Session session,
+			Request<JsonObject> request)
+					throws TreeException {
 
 		String treeId = getParam(request, TREE_ID, String.class, true);
 		try {
@@ -91,7 +98,7 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 	}
 
-	public void releaseTree(Request<JsonObject> request) {
+	public void releaseTree(Session session, Request<JsonObject> request) {
 		try {
 			treeManager.releaseTree(getParam(request, TREE_ID, String.class));
 		} catch (TreeException e) {
@@ -99,9 +106,10 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 	}
 
-	public Response<JsonElement> setTreeSource(Request<JsonObject> request) {
+	public Response<JsonElement> setTreeSource(Session session,
+			Request<JsonObject> request) {
 		try {
-			String sdp = treeManager.setTreeSource(
+			String sdp = treeManager.setTreeSource(session,
 					getParam(request, TREE_ID, String.class),
 					getParam(request, OFFER_SDP, String.class));
 
@@ -115,9 +123,13 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 	}
 
-	public Response<JsonElement> addTreeSink(Request<JsonObject> request) {
+	public Response<JsonElement> addTreeSink(Session session,
+			Request<JsonObject> request) {
 		try {
-			TreeEndpoint endpoint = treeManager.addTreeSink(
+			log.info("Session: id {} , regInfo {} , class {}", session
+					.getSessionId(),
+					session.getRegisterInfo(), session.getClass().getName());
+			TreeEndpoint endpoint = treeManager.addTreeSink(session,
 					getParam(request, TREE_ID, String.class),
 					getParam(request, OFFER_SDP, String.class));
 
@@ -132,7 +144,7 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 	}
 
-	public void removeTreeSource(Request<JsonObject> request) {
+	public void removeTreeSource(Session session, Request<JsonObject> request) {
 		try {
 			treeManager.removeTreeSource(getParam(request, TREE_ID,
 					String.class));
@@ -142,7 +154,7 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 	}
 
-	public void removeTreeSink(Request<JsonObject> request) {
+	public void removeTreeSink(Session session, Request<JsonObject> request) {
 		try {
 			treeManager.removeTreeSink(
 					getParam(request, TREE_ID, String.class),
@@ -153,7 +165,25 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	public void onIceCandidate(Session session, Request<JsonObject> request) {
+		try {
+			String candidate = getParam(request, ICE_CANDIDATE, String.class);
+			String sdpMid = getParam(request, ICE_SDP_MID, String.class);
+			int sdpMLineIndex = getParam(request, ICE_SDP_M_LINE_INDEX,
+					Integer.class);
+			IceCandidate iceCandidate = new IceCandidate(candidate, sdpMid,
+					sdpMLineIndex);
+			String treeId = getParam(request, TREE_ID, String.class);
+			String sinkId = getParam(request, SINK_ID, String.class, true);
+			if (sinkId != null)
+				treeManager.addSinkIceCandidate(treeId, sinkId, iceCandidate);
+			else
+				treeManager.addTreeIceCandidate(treeId, iceCandidate);
+		} catch (TreeException e) {
+			throw new JsonRpcErrorException(2, e.getMessage());
+		}
+	}
+
 	public <T> T getParam(Request<JsonObject> request, String paramName,
 			Class<T> type) {
 		return getParam(request, paramName, type, false);

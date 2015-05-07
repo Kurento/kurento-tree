@@ -1,5 +1,7 @@
 package org.kurento.tree.server.treemanager;
 
+import org.kurento.client.IceCandidate;
+import org.kurento.jsonrpc.Session;
 import org.kurento.tree.client.TreeEndpoint;
 import org.kurento.tree.client.TreeException;
 import org.kurento.tree.server.kmsmanager.KmsManager;
@@ -16,7 +18,7 @@ public class FakeTM implements TreeManager {
 	}
 
 	@Override
-	public String setTreeSource(String treeId, String offerSdp)
+	public String setTreeSource(Session session, String treeId, String offerSdp)
 			throws TreeException {
 		return "sdp";
 	}
@@ -26,8 +28,8 @@ public class FakeTM implements TreeManager {
 	}
 
 	@Override
-	public TreeEndpoint addTreeSink(String treeId, String offerSdp)
-			throws TreeException {
+	public TreeEndpoint addTreeSink(Session session, String treeId,
+			String offerSdp) throws TreeException {
 		return new TreeEndpoint("sdp", "id");
 	}
 
@@ -43,5 +45,14 @@ public class FakeTM implements TreeManager {
 
 	@Override
 	public void createTree(String treeId) throws TreeException {
+	}
+
+	@Override
+	public void addSinkIceCandidate(String treeId, String sinkId,
+			IceCandidate iceCandidate) {
+	}
+
+	@Override
+	public void addTreeIceCandidate(String treeId, IceCandidate iceCandidate) {
 	}
 }

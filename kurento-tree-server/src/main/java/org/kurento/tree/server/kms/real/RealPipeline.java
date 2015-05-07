@@ -1,6 +1,7 @@
 package org.kurento.tree.server.kms.real;
 
 import org.kurento.client.MediaPipeline;
+import org.kurento.tree.server.app.TreeElementSession;
 import org.kurento.tree.server.kms.Pipeline;
 import org.kurento.tree.server.kms.Plumber;
 import org.kurento.tree.server.kms.WebRtc;
@@ -18,10 +19,12 @@ public class RealPipeline extends Pipeline {
 		return mediaPipeline;
 	}
 
-	protected WebRtc newWebRtc() {
-		return new RealWebRtc(this);
+	@Override
+	protected WebRtc newWebRtc(TreeElementSession session) {
+		return new RealWebRtc(this, session);
 	}
 
+	@Override
 	protected Plumber newPlumber() {
 		return new RealPlumber(this);
 	}

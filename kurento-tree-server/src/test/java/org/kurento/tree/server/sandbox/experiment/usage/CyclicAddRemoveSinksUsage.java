@@ -33,18 +33,18 @@ public class CyclicAddRemoveSinksUsage extends UsageSimulation {
 			try {
 				if (!created) {
 					treeManager.createTree(treeId);
-					treeManager.setTreeSource(treeId, "XXX");
+					treeManager.setTreeSource(null, treeId, "XXX");
 					created = true;
 
 				} else if (growing) {
 
-					String sinkId = treeManager.addTreeSink(treeId, "fakeSdp")
-							.getId();
+					String sinkId = treeManager.addTreeSink(null, treeId,
+							"fakeSdp").getId();
 					sinks.add(treeId + "|" + sinkId);
 
 					if (sinks.size() == maxSinksPerTree) {
 						growing = false;
-						System.out.println("Srinking Tree " + treeId);
+						System.out.println("Shrinking Tree " + treeId);
 					}
 
 				} else {
