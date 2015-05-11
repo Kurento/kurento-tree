@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2013 Kurento (http://kurento.org/)
+ * (C) Copyright 2015 Kurento (http://kurento.org/)
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Lesser General Public License
@@ -15,19 +15,131 @@
 
 package org.kurento.tree.client;
 
+import static org.kurento.tree.client.internal.ProtocolElements.ICE_CANDIDATE;
+import static org.kurento.tree.client.internal.ProtocolElements.ICE_CANDIDATE_EVENT;
+import static org.kurento.tree.client.internal.ProtocolElements.ICE_SDP_MID;
+import static org.kurento.tree.client.internal.ProtocolElements.ICE_SDP_M_LINE_INDEX;
+import static org.kurento.tree.client.internal.ProtocolElements.SINK_ID;
+import static org.kurento.tree.client.internal.ProtocolElements.TREE_ID;
+
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+
+import org.kurento.client.IceCandidate;
 import org.kurento.jsonrpc.DefaultJsonRpcHandler;
+import org.kurento.jsonrpc.JsonRpcErrorException;
 import org.kurento.jsonrpc.Transaction;
 import org.kurento.jsonrpc.message.Request;
+import org.kurento.tree.client.internal.IceCandidateInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class ServerJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
+	private static final Logger log = LoggerFactory
+			.getLogger(ServerJsonRpcHandler.class);
+
+	private BlockingQueue<IceCandidateInfo> candidates = new ArrayBlockingQueue<IceCandidateInfo>(
+			100);
+
 	@Override
 	public void handleRequest(Transaction transaction,
 			Request<JsonObject> request) throws Exception {
-		// TODO Auto-generated method stub
+		try {
+			switch (request.getMethod()) {
+			case ICE_CANDIDATE_EVENT:
+				iceCandidateEvent(transaction, request);
+				break;
+			default:
+				log.error("Unrecognized request {}", request);
+				break;
+			}
+		} catch (Exception e) {
+			log.error("Exception processing request {}", request, e);
+			transaction.sendError(e);
+		}
+	}
 
+	private void iceCandidateEvent(Transaction transaction,
+			Request<JsonObject> request) {
+		String candidate = getParam(request, ICE_CANDIDATE, String.class);
+		String sdpMid = getParam(request, ICE_SDP_MID, String.class);
+		int sdpMLineIndex = getParam(request, ICE_SDP_M_LINE_INDEX,
+				Integer.class);
+		IceCandidate iceCandidate = new IceCandidate(candidate, sdpMid,
+				sdpMLineIndex);
+		String treeId = getParam(request, TREE_ID, String.class);
+		String sinkId = getParam(request, SINK_ID, String.class, true);
+		IceCandidateInfo eventInfo = new IceCandidateInfo(iceCandidate, treeId,
+				sinkId);
+
+		log.debug("Enqueueing ICE candidate info {}", eventInfo);
+		try {
+			candidates.put(eventInfo);
+			log.debug("Enqueued ICE candidate info {}", eventInfo);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Blocks until an element is available and then returns it by removing it
+	 * from the queue.
+	 * 
+	 * @return an {@link IceCandidateInfo} from the queue, null when interrupted
+	 * @see BlockingQueue#take()
+	 */
+	public IceCandidateInfo getCandidateInfo() {
+		try {
+			return candidates.take();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	// TODO utility methods that are also used on the server side, use an Utils
+	// class on the client
+	public <T> T getParam(Request<JsonObject> request, String paramName,
+			Class<T> type) {
+		return getParam(request, paramName, type, false);
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T getParam(Request<JsonObject> request, String paramName,
+			Class<T> type, boolean allowNull) {
+
+		JsonObject params = request.getParams();
+		if (params == null) {
+			if (!allowNull) {
+				throw new JsonRpcErrorException(1,
+						"Invalid request lacking parameter '" + paramName + "'");
+			} else {
+				return null;
+			}
+		}
+
+		JsonElement paramValue = params.get(paramName);
+		if (paramValue == null) {
+			if (allowNull) {
+				return null;
+			} else {
+				throw new JsonRpcErrorException(1,
+						"Invalid request lacking parameter '" + paramName + "'");
+			}
+		}
+
+		if (type == String.class) {
+			if (paramValue.isJsonPrimitive()) {
+				return (T) paramValue.getAsString();
+			}
+		}
+
+		throw new JsonRpcErrorException(2, "Param '" + paramName
+				+ " with value '" + paramValue + "' is not a String");
 	}
 
 }

@@ -36,7 +36,7 @@ public class TreeDemoApp implements WebSocketConfigurer {
 
 	final static String DEFAULT_KTS_WS_URI = "ws://localhost:8890/kurento-tree";
 
-	@Bean
+	@Bean(destroyMethod = "cleanup")
 	public TreeDemoHandler callHandler() {
 		return new TreeDemoHandler();
 	}
@@ -47,6 +47,7 @@ public class TreeDemoApp implements WebSocketConfigurer {
 				DEFAULT_KTS_WS_URI));
 	}
 
+	@Override
 	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
 		registry.addHandler(callHandler(), "/call");
 	}

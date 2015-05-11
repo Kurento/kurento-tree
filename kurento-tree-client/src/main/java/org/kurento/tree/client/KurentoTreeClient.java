@@ -3,7 +3,11 @@ package org.kurento.tree.client;
 import static org.kurento.tree.client.internal.ProtocolElements.ADD_TREE_SINK_METHOD;
 import static org.kurento.tree.client.internal.ProtocolElements.ANSWER_SDP;
 import static org.kurento.tree.client.internal.ProtocolElements.CREATE_TREE_METHOD;
+import static org.kurento.tree.client.internal.ProtocolElements.ICE_CANDIDATE;
+import static org.kurento.tree.client.internal.ProtocolElements.ICE_SDP_MID;
+import static org.kurento.tree.client.internal.ProtocolElements.ICE_SDP_M_LINE_INDEX;
 import static org.kurento.tree.client.internal.ProtocolElements.OFFER_SDP;
+import static org.kurento.tree.client.internal.ProtocolElements.ON_ICE_CANDIDATE_METHOD;
 import static org.kurento.tree.client.internal.ProtocolElements.RELEASE_TREE_METHOD;
 import static org.kurento.tree.client.internal.ProtocolElements.REMOVE_TREE_SINK_METHOD;
 import static org.kurento.tree.client.internal.ProtocolElements.REMOVE_TREE_SOURCE_METHOD;
@@ -13,11 +17,13 @@ import static org.kurento.tree.client.internal.ProtocolElements.TREE_ID;
 
 import java.io.IOException;
 
+import org.kurento.client.IceCandidate;
 import org.kurento.jsonrpc.JsonRpcErrorException;
 import org.kurento.jsonrpc.JsonRpcException;
 import org.kurento.jsonrpc.JsonUtils;
 import org.kurento.jsonrpc.client.JsonRpcClient;
 import org.kurento.jsonrpc.client.JsonRpcClientWebSocket;
+import org.kurento.tree.client.internal.IceCandidateInfo;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -25,6 +31,7 @@ import com.google.gson.JsonObject;
 public class KurentoTreeClient {
 
 	private JsonRpcClient client;
+	private ServerJsonRpcHandler handler;
 
 	public KurentoTreeClient(String wsUri) {
 		this(new JsonRpcClientWebSocket(wsUri));
@@ -32,7 +39,14 @@ public class KurentoTreeClient {
 
 	public KurentoTreeClient(JsonRpcClient client) {
 		this.client = client;
-		this.client.setServerRequestHandler(new ServerJsonRpcHandler());
+		this.handler = new ServerJsonRpcHandler();
+		this.client.setServerRequestHandler(this.handler);
+	}
+
+	public KurentoTreeClient(JsonRpcClient client, ServerJsonRpcHandler handler) {
+		this.client = client;
+		this.handler = handler;
+		this.client.setServerRequestHandler(this.handler);
 	}
 
 	public String createTree() throws IOException {
@@ -128,6 +142,46 @@ public class KurentoTreeClient {
 
 			client.sendRequest(REMOVE_TREE_SINK_METHOD, params);
 
+		} catch (JsonRpcErrorException e) {
+			processException(e);
+		}
+	}
+
+	/**
+	 * Polls the candidates list maintained by this client to obtain a candidate
+	 * gathered on the server side. This method blocks until there is a
+	 * candidate to return. This is a one-time operation for the returned
+	 * element.
+	 * 
+	 * @return the gathered candidate, null when interrupted while waiting
+	 */
+	public IceCandidateInfo getServerCandidate() {
+		return this.handler.getCandidateInfo();
+	}
+
+	/**
+	 * Notifies the server of a gathered ICE candidate on the client side.
+	 * 
+	 * @param treeId
+	 *            the tree identifier
+	 * @param sinkId
+	 *            optional (nullable) identifier
+	 * @param candidate
+	 *            the gathered candidate
+	 * @throws TreeException
+	 * @throws IOException
+	 */
+	public void addIceCandidate(String treeId, String sinkId,
+			IceCandidate candidate) throws TreeException, IOException {
+		JsonObject params = new JsonObject();
+		params.addProperty(TREE_ID, treeId);
+		if (sinkId != null && !sinkId.isEmpty())
+			params.addProperty(SINK_ID, sinkId);
+		params.addProperty(ICE_CANDIDATE, candidate.getCandidate());
+		params.addProperty(ICE_SDP_M_LINE_INDEX, candidate.getSdpMLineIndex());
+		params.addProperty(ICE_SDP_MID, candidate.getSdpMid());
+		try {
+			client.sendRequest(ON_ICE_CANDIDATE_METHOD, params);
 		} catch (JsonRpcErrorException e) {
 			processException(e);
 		}

@@ -62,18 +62,18 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			}
 
 		} catch (InvocationTargetException e) {
-			log.error("Exception executing request " + request, e);
+			log.error("Exception executing request {}", request, e);
 
 			transaction.sendError(e.getCause());
 
 		} catch (NoSuchMethodException e) {
-			log.error("Requesting unrecognized method '" + request.getMethod()
-					+ "'");
+			log.error("Requesting unrecognized method '{}'",
+					request.getMethod());
 			transaction.sendError(1,
 					"Unrecognized method '" + request.getMethod() + "'", null);
 
 		} catch (Exception e) {
-			log.error("Exception processing request " + request, e);
+			log.error("Exception processing request {}", request, e);
 			transaction.sendError(e);
 		}
 	}

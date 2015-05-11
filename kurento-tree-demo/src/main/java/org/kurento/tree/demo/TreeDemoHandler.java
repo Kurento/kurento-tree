@@ -17,8 +17,12 @@ package org.kurento.tree.demo;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.kurento.client.IceCandidate;
 import org.kurento.tree.client.KurentoTreeClient;
 import org.kurento.tree.client.TreeEndpoint;
+import org.kurento.tree.client.TreeException;
+import org.kurento.tree.client.internal.IceCandidateInfo;
+import org.kurento.tree.client.internal.ProtocolElements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +55,28 @@ public class TreeDemoHandler extends TextWebSocketHandler {
 	private UserSession masterUserSession;
 
 	private String treeId;
+
+	private Thread notifThread;
+
+	public TreeDemoHandler() {
+		this.notifThread = new Thread("notif:") {
+			@Override
+			public void run() {
+				try {
+					internalSendNotification();
+				} catch (InterruptedException e) {
+					return;
+				}
+			}
+		};
+	}
+
+	/**
+	 * This bean's 'destroyMethod'.
+	 */
+	public void cleanup() {
+		this.notifThread.interrupt();
+	}
 
 	@Override
 	public void handleTextMessage(WebSocketSession session, TextMessage message)
@@ -89,6 +115,9 @@ public class TreeDemoHandler extends TextWebSocketHandler {
 			break;
 		case "stop":
 			stop(session);
+			break;
+		case "onIceCandidate":
+			onIceCandidate(session, jsonMessage);
 			break;
 		default:
 			break;
@@ -158,6 +187,7 @@ public class TreeDemoHandler extends TextWebSocketHandler {
 
 			TreeEndpoint treeEndpoint = kurentoTree.addTreeSink(treeId,
 					sdpOffer);
+			viewer.setSinkId(treeEndpoint.getId());
 
 			String sdpAnswer = treeEndpoint.getSdp();
 
@@ -192,6 +222,80 @@ public class TreeDemoHandler extends TextWebSocketHandler {
 				kurentoTree.removeTreeSink(treeId, sinkId);
 			}
 			viewers.remove(sessionId);
+		}
+	}
+
+	private synchronized void onIceCandidate(WebSocketSession session,
+			JsonObject jsonMessage) throws IOException {
+		String sessionId = session.getId();
+		String sinkId = null;
+		if (viewers.containsKey(sessionId))
+			sinkId = viewers.get(sessionId).getSinkId();
+		else if (masterUserSession == null
+				|| !masterUserSession.getSession().getId().equals(sessionId)) {
+			log.warn("No active user session found for id " + sessionId
+					+ ". Ice candidate discarded: " + jsonMessage);
+			return;
+		}
+
+		String candidate = jsonMessage.get(ProtocolElements.ICE_CANDIDATE)
+				.getAsString();
+		int sdpMLineIndex = jsonMessage.get(
+				ProtocolElements.ICE_SDP_M_LINE_INDEX).getAsInt();
+		String sdpMid = jsonMessage.get(ProtocolElements.ICE_SDP_MID)
+				.getAsString();
+		kurentoTree.addIceCandidate(treeId, sinkId, new IceCandidate(candidate,
+				sdpMid, sdpMLineIndex));
+	}
+
+	private void internalSendNotification() throws InterruptedException {
+		while (true) {
+			try {
+				IceCandidateInfo candidateInfo = kurentoTree
+						.getServerCandidate();
+				if (candidateInfo == null)
+					return;
+				log.debug("Sending notification {}", candidateInfo);
+				WebSocketSession session = null;
+				if (candidateInfo.getTreeId() != treeId)
+					throw new TreeException(
+							"Unrecognized ice candidate info for current tree "
+									+ treeId + " : " + candidateInfo);
+				if (candidateInfo.getSinkId() == null) {
+					if (masterUserSession == null)
+						throw new TreeException(
+								"No sender session, so candidate info will be discarded: "
+										+ candidateInfo);
+					session = masterUserSession.getSession();
+				} else {
+					// TODO improve, maybe keep sinkIds and sessionIds in a
+					// separate map
+					for (UserSession userSession : viewers.values())
+						if (userSession.getSinkId().equals(
+								candidateInfo.getSinkId())) {
+							session = userSession.getSession();
+							break;
+						}
+				}
+				if (session == null)
+					throw new TreeException(
+							"No viewer session for the 'sinkId' from candidate info, will be discarded: "
+									+ candidateInfo);
+				JsonObject notification = new JsonObject();
+				notification.addProperty("id",
+						ProtocolElements.ICE_CANDIDATE_EVENT);
+				notification.addProperty(ProtocolElements.ICE_CANDIDATE,
+						candidateInfo.getIceCandidate().getCandidate());
+				notification.addProperty(ProtocolElements.ICE_SDP_M_LINE_INDEX,
+						candidateInfo.getIceCandidate().getSdpMLineIndex());
+				notification.addProperty(ProtocolElements.ICE_SDP_MID,
+						candidateInfo.getIceCandidate().getSdpMid());
+				session.sendMessage(new TextMessage(notification.toString()));
+			} catch (Exception e) {
+				log.warn(
+						"Exception while processing ICE candidate and sending notification",
+						e);
+			}
 		}
 	}
 
