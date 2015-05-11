@@ -27,14 +27,13 @@ import java.util.concurrent.BlockingQueue;
 
 import org.kurento.client.IceCandidate;
 import org.kurento.jsonrpc.DefaultJsonRpcHandler;
-import org.kurento.jsonrpc.JsonRpcErrorException;
 import org.kurento.jsonrpc.Transaction;
 import org.kurento.jsonrpc.message.Request;
 import org.kurento.tree.client.internal.IceCandidateInfo;
+import org.kurento.tree.client.internal.JsonTreeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class ServerJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
@@ -42,7 +41,7 @@ public class ServerJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	private static final Logger log = LoggerFactory
 			.getLogger(ServerJsonRpcHandler.class);
 
-	private BlockingQueue<IceCandidateInfo> candidates = new ArrayBlockingQueue<IceCandidateInfo>(
+	private static BlockingQueue<IceCandidateInfo> candidates = new ArrayBlockingQueue<IceCandidateInfo>(
 			100);
 
 	@Override
@@ -65,14 +64,19 @@ public class ServerJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	private void iceCandidateEvent(Transaction transaction,
 			Request<JsonObject> request) {
-		String candidate = getParam(request, ICE_CANDIDATE, String.class);
-		String sdpMid = getParam(request, ICE_SDP_MID, String.class);
-		int sdpMLineIndex = getParam(request, ICE_SDP_M_LINE_INDEX,
+		String candidate = JsonTreeUtils.getRequestParam(request,
+				ICE_CANDIDATE, String.class);
+		String sdpMid = JsonTreeUtils.getRequestParam(request, ICE_SDP_MID,
+				String.class);
+		int sdpMLineIndex = JsonTreeUtils.getRequestParam(request,
+				ICE_SDP_M_LINE_INDEX,
 				Integer.class);
 		IceCandidate iceCandidate = new IceCandidate(candidate, sdpMid,
 				sdpMLineIndex);
-		String treeId = getParam(request, TREE_ID, String.class);
-		String sinkId = getParam(request, SINK_ID, String.class, true);
+		String treeId = JsonTreeUtils.getRequestParam(request, TREE_ID,
+				String.class);
+		String sinkId = JsonTreeUtils.getRequestParam(request, SINK_ID,
+				String.class, true);
 		IceCandidateInfo eventInfo = new IceCandidateInfo(iceCandidate, treeId,
 				sinkId);
 
@@ -94,52 +98,12 @@ public class ServerJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	 */
 	public IceCandidateInfo getCandidateInfo() {
 		try {
-			return candidates.take();
+			IceCandidateInfo candidateInfo = candidates.take();
+			log.debug("Dequeued ICE candidate info {}", candidateInfo);
+			return candidateInfo;
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 			return null;
 		}
 	}
-
-	// TODO utility methods that are also used on the server side, use an Utils
-	// class on the client
-	public <T> T getParam(Request<JsonObject> request, String paramName,
-			Class<T> type) {
-		return getParam(request, paramName, type, false);
-	}
-
-	@SuppressWarnings("unchecked")
-	public <T> T getParam(Request<JsonObject> request, String paramName,
-			Class<T> type, boolean allowNull) {
-
-		JsonObject params = request.getParams();
-		if (params == null) {
-			if (!allowNull) {
-				throw new JsonRpcErrorException(1,
-						"Invalid request lacking parameter '" + paramName + "'");
-			} else {
-				return null;
-			}
-		}
-
-		JsonElement paramValue = params.get(paramName);
-		if (paramValue == null) {
-			if (allowNull) {
-				return null;
-			} else {
-				throw new JsonRpcErrorException(1,
-						"Invalid request lacking parameter '" + paramName + "'");
-			}
-		}
-
-		if (type == String.class) {
-			if (paramValue.isJsonPrimitive()) {
-				return (T) paramValue.getAsString();
-			}
-		}
-
-		throw new JsonRpcErrorException(2, "Param '" + paramName
-				+ " with value '" + paramValue + "' is not a String");
-	}
-
 }

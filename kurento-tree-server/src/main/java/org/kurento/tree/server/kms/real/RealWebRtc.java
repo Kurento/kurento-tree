@@ -44,6 +44,10 @@ public class RealWebRtc extends WebRtc implements RealElement {
 					session.getSession().sendNotification(
 							ProtocolElements.ICE_CANDIDATE_EVENT,
 							params);
+							log.debug(
+									"Sent ICE candidate notif for {}: {} - {}",
+									session, event.getCandidate().getSdpMid(),
+									event.getCandidate().getCandidate());
 				} catch (IOException e) {
 					log.warn(
 							"Exception while sending ice candidate for {}",

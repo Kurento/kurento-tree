@@ -122,8 +122,9 @@ public class LexicalFixedTM extends AbstractOneTreeTM {
 				sourceWebRtc.connect(plumber);
 			}
 		}
-
-		return sourceWebRtc.processSdpOffer(offerSdp);
+		String sdpAnswer = sourceWebRtc.processSdpOffer(offerSdp);
+		sourceWebRtc.gatherCandidates();
+		return sdpAnswer;
 	}
 
 	@Override

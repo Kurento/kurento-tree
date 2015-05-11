@@ -122,7 +122,9 @@ public class LessLoadedOneTreeFixedTM extends AbstractOneTreeTM {
 			}
 		}
 
-		return source.processSdpOffer(offerSdp);
+		String sdpAnswer = source.processSdpOffer(offerSdp);
+		source.gatherCandidates();
+		return sdpAnswer;
 	}
 
 	@Override
@@ -220,12 +222,12 @@ public class LessLoadedOneTreeFixedTM extends AbstractOneTreeTM {
 		if (sinkIdTokens[0].equals("r")) {
 			int numWebRtc = Integer.parseInt(sinkIdTokens[1]);
 			this.sourcePipeline.getWebRtcs().get(numWebRtc)
-					.addIceCandidate(iceCandidate);
+			.addIceCandidate(iceCandidate);
 		} else {
 			int numPipeline = Integer.parseInt(sinkIdTokens[0]);
 			int numWebRtc = Integer.parseInt(sinkIdTokens[1]);
 			this.leafPipelines.get(numPipeline).getWebRtcs().get(numWebRtc)
-					.addIceCandidate(iceCandidate);
+			.addIceCandidate(iceCandidate);
 		}
 	}
 

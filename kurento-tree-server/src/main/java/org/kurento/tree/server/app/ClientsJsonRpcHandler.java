@@ -20,6 +20,7 @@ import org.kurento.jsonrpc.message.Request;
 import org.kurento.jsonrpc.message.Response;
 import org.kurento.tree.client.TreeEndpoint;
 import org.kurento.tree.client.TreeException;
+import org.kurento.tree.client.internal.JsonTreeUtils;
 import org.kurento.tree.server.treemanager.TreeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +83,8 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			Request<JsonObject> request)
 					throws TreeException {
 
-		String treeId = getParam(request, TREE_ID, String.class, true);
+		String treeId = JsonTreeUtils
+				.getRequestParam(request, TREE_ID, String.class, true);
 		try {
 			if (treeId == null) {
 				String newTreeId = treeManager.createTree();
@@ -100,7 +102,8 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	public void releaseTree(Session session, Request<JsonObject> request) {
 		try {
-			treeManager.releaseTree(getParam(request, TREE_ID, String.class));
+			treeManager.releaseTree(JsonTreeUtils.getRequestParam(request, TREE_ID,
+					String.class));
 		} catch (TreeException e) {
 			throw new JsonRpcErrorException(2, e.getMessage());
 		}
@@ -110,8 +113,8 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			Request<JsonObject> request) {
 		try {
 			String sdp = treeManager.setTreeSource(session,
-					getParam(request, TREE_ID, String.class),
-					getParam(request, OFFER_SDP, String.class));
+					JsonTreeUtils.getRequestParam(request, TREE_ID, String.class),
+					JsonTreeUtils.getRequestParam(request, OFFER_SDP, String.class));
 
 			JsonObject result = new JsonObject();
 			result.addProperty(ANSWER_SDP, sdp);
@@ -130,8 +133,8 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 					.getSessionId(),
 					session.getRegisterInfo(), session.getClass().getName());
 			TreeEndpoint endpoint = treeManager.addTreeSink(session,
-					getParam(request, TREE_ID, String.class),
-					getParam(request, OFFER_SDP, String.class));
+					JsonTreeUtils.getRequestParam(request, TREE_ID, String.class),
+					JsonTreeUtils.getRequestParam(request, OFFER_SDP, String.class));
 
 			JsonObject result = new JsonObject();
 			result.addProperty(SINK_ID, endpoint.getId());
@@ -146,7 +149,7 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	public void removeTreeSource(Session session, Request<JsonObject> request) {
 		try {
-			treeManager.removeTreeSource(getParam(request, TREE_ID,
+			treeManager.removeTreeSource(JsonTreeUtils.getRequestParam(request, TREE_ID,
 					String.class));
 
 		} catch (TreeException e) {
@@ -157,8 +160,8 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	public void removeTreeSink(Session session, Request<JsonObject> request) {
 		try {
 			treeManager.removeTreeSink(
-					getParam(request, TREE_ID, String.class),
-					getParam(request, SINK_ID, String.class));
+					JsonTreeUtils.getRequestParam(request, TREE_ID, String.class),
+					JsonTreeUtils.getRequestParam(request, SINK_ID, String.class));
 
 		} catch (TreeException e) {
 			throw new JsonRpcErrorException(2, e.getMessage());
@@ -167,14 +170,18 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	public void onIceCandidate(Session session, Request<JsonObject> request) {
 		try {
-			String candidate = getParam(request, ICE_CANDIDATE, String.class);
-			String sdpMid = getParam(request, ICE_SDP_MID, String.class);
-			int sdpMLineIndex = getParam(request, ICE_SDP_M_LINE_INDEX,
+			String candidate = JsonTreeUtils.getRequestParam(request, ICE_CANDIDATE,
+					String.class);
+			String sdpMid = JsonTreeUtils.getRequestParam(request, ICE_SDP_MID,
+					String.class);
+			int sdpMLineIndex = JsonTreeUtils.getRequestParam(request,
+					ICE_SDP_M_LINE_INDEX,
 					Integer.class);
 			IceCandidate iceCandidate = new IceCandidate(candidate, sdpMid,
 					sdpMLineIndex);
-			String treeId = getParam(request, TREE_ID, String.class);
-			String sinkId = getParam(request, SINK_ID, String.class, true);
+			String treeId = JsonTreeUtils.getRequestParam(request, TREE_ID, String.class);
+			String sinkId = JsonTreeUtils.getRequestParam(request, SINK_ID, String.class,
+					true);
 			if (sinkId != null)
 				treeManager.addSinkIceCandidate(treeId, sinkId, iceCandidate);
 			else
@@ -182,44 +189,5 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		} catch (TreeException e) {
 			throw new JsonRpcErrorException(2, e.getMessage());
 		}
-	}
-
-	public <T> T getParam(Request<JsonObject> request, String paramName,
-			Class<T> type) {
-		return getParam(request, paramName, type, false);
-	}
-
-	@SuppressWarnings("unchecked")
-	public <T> T getParam(Request<JsonObject> request, String paramName,
-			Class<T> type, boolean allowNull) {
-
-		JsonObject params = request.getParams();
-		if (params == null) {
-			if (!allowNull) {
-				throw new JsonRpcErrorException(1,
-						"Invalid request lacking parameter '" + paramName + "'");
-			} else {
-				return null;
-			}
-		}
-
-		JsonElement paramValue = params.get(paramName);
-		if (paramValue == null) {
-			if (allowNull) {
-				return null;
-			} else {
-				throw new JsonRpcErrorException(1,
-						"Invalid request lacking parameter '" + paramName + "'");
-			}
-		}
-
-		if (type == String.class) {
-			if (paramValue.isJsonPrimitive()) {
-				return (T) paramValue.getAsString();
-			}
-		}
-
-		throw new JsonRpcErrorException(2, "Param '" + paramName
-				+ " with value '" + paramValue + "' is not a String");
 	}
 }

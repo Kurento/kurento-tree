@@ -93,8 +93,9 @@ public class LessLoadedElasticTM extends AbstractNTreeTM {
 			}
 			source = sourcePipeline.createWebRtc(new TreeElementSession(
 					session, treeId, null));
-			return source.processSdpOffer(offerSdp);
-			// FIXME is source required to start gathering candidates??
+			String sdpAnswer = source.processSdpOffer(offerSdp);
+			source.gatherCandidates();
+			return sdpAnswer;
 		}
 
 		@Override

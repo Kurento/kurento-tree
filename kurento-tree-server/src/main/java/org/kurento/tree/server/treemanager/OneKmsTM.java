@@ -64,7 +64,9 @@ public class OneKmsTM extends AbstractNTreeTM {
 			}
 			source = pipeline.createWebRtc(new TreeElementSession(session,
 					treeId, null));
-			return source.processSdpOffer(offerSdp);
+			String sdpAnswer = source.processSdpOffer(offerSdp);
+			source.gatherCandidates();
+			return sdpAnswer;
 		}
 
 		@Override

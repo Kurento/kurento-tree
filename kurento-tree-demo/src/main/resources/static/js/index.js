@@ -16,6 +16,8 @@
 var ws = new WebSocket('ws://' + location.host + '/call');
 var video;
 var webRtcPeer;
+var name = 'master';
+var that = this;
 
 window.onload = function() {
 	console = new Console('console', console);
@@ -40,6 +42,9 @@ ws.onmessage = function(message) {
 	case 'stopCommunication':
 		dispose();
 		break;
+	case 'iceCandidate':
+		iceCandidate(parsedMessage);
+		break;
 	default:
 		console.error('Unrecognized message', parsedMessage);
 	}
@@ -51,7 +56,9 @@ function masterResponse(message) {
 		console.info('Call not accepted for the following reason: ' + errorMsg);
 		dispose();
 	} else {
-		webRtcPeer.processSdpAnswer(message.sdpAnswer);
+		webRtcPeer.processAnswer(message.sdpAnswer, function (error) {
+			if (error) return console.error (error);
+		});
 	}
 }
 
@@ -61,35 +68,100 @@ function viewerResponse(message) {
 		console.info('Call not accepted for the following reason: ' + errorMsg);
 		dispose();
 	} else {
-		webRtcPeer.processSdpAnswer(message.sdpAnswer);
+		webRtcPeer.processAnswer(message.sdpAnswer, function (error) {
+			if (error) return console.error (error);
+		});
 	}
+}
+
+//from server
+function iceCandidate(message) {
+	if (webRtcPeer) {
+    	var candidate = {
+    			candidate: message.candidate,
+    			sdpMid: message.sdpMid,
+    			sdpMLineIndex: message.sdpMLineIndex
+    	}
+	    webRtcPeer.addIceCandidate(candidate, function (error) {
+	    	if (error) {
+	    		console.error("Error adding candidate: " + error);
+	        	return;
+	        }
+	    });
+	} else
+		console.error("WebRTC endpoint not initialized yet and already " +
+				"recvd an ICE candidate: " + message);
+}
+
+//from local peer
+function onIceCandidate(candidate) {
+	  console.log("Local candidate" + JSON.stringify(candidate));
+	  var message = {
+	    id: 'onIceCandidate',
+	    candidate: candidate.candidate,
+	    sdpMLineIndex: candidate.sdpMLineIndex,
+	    sdpMid: candidate.sdpMid
+	  };
+	  sendMessage(message);
+}
+
+this.offerToReceiveVideo = function(error, offerSdp, wp){
+	if (error) return console.error ("sdp offer error")
+	console.log('Invoking SDP offer callback function');
+	var msg =  {
+			id : name,
+			sdpOffer : offerSdp
+		};
+	sendMessage(msg);
 }
 
 function master() {
 	if (!webRtcPeer) {
 		showSpinner(video);
 
-		webRtcPeer = kurentoUtils.WebRtcPeer.startSendOnly(video, function(offerSdp) {
-			var message = {
-				id : 'master',
-				sdpOffer : offerSdp
+		var constraints = {
+				audio : true,
+				video : {
+					mandatory : {
+						maxWidth : 640,
+						maxFrameRate : 15,
+						minFrameRate : 15
+					}
+				}
 			};
-			sendMessage(message);
-		});
+
+		var options = {
+			      localVideo: video,
+			      mediaConstraints: constraints,
+			      onicecandidate: that.onIceCandidate.bind(that)
+			    }
+		webRtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
+				function (error) {
+					if(error) {
+					  return console.error(error);
+					}
+					this.generateOffer(that.offerToReceiveVideo.bind(that));
+				});
 	}
 }
 
 function viewer() {
+	name = 'viewer';
 	if (!webRtcPeer) {
 		showSpinner(video);
 
-		webRtcPeer = kurentoUtils.WebRtcPeer.startRecvOnly(video, function(offerSdp) {
-			var message = {
-				id : 'viewer',
-				sdpOffer : offerSdp
-			};
-			sendMessage(message);
-		});
+		var options = {
+				remoteVideo: video,
+				onicecandidate: that.onIceCandidate.bind(that)
+		}
+
+		webRtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options,
+				function (error) {
+				  if(error) {
+					  return console.error(error);
+				  }
+				  this.generateOffer(that.offerToReceiveVideo.bind(that));
+		});;
 	}
 }
 
@@ -111,7 +183,7 @@ function dispose() {
 
 function sendMessage(message) {
 	var jsonMessage = JSON.stringify(message);
-	console.log('Senging message: ' + jsonMessage);
+	console.log('Sending message: ' + jsonMessage);
 	ws.send(jsonMessage);
 }
 

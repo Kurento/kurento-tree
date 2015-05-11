@@ -19,11 +19,11 @@ import java.io.IOException;
 
 import org.kurento.client.IceCandidate;
 import org.kurento.jsonrpc.JsonRpcErrorException;
-import org.kurento.jsonrpc.JsonRpcException;
 import org.kurento.jsonrpc.JsonUtils;
 import org.kurento.jsonrpc.client.JsonRpcClient;
 import org.kurento.jsonrpc.client.JsonRpcClientWebSocket;
 import org.kurento.tree.client.internal.IceCandidateInfo;
+import org.kurento.tree.client.internal.JsonTreeUtils;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -85,9 +85,8 @@ public class KurentoTreeClient {
 
 			JsonElement result = client.sendRequest(SET_TREE_SOURCE_METHOD,
 					params);
-
-			return getResponseProperty(result, ANSWER_SDP, String.class);
-
+			return JsonTreeUtils.getResponseProperty(result, ANSWER_SDP,
+					String.class);
 		} catch (JsonRpcErrorException e) {
 			processException(e);
 			return null;
@@ -121,8 +120,9 @@ public class KurentoTreeClient {
 			JsonElement result = client.sendRequest(ADD_TREE_SINK_METHOD,
 					params);
 
-			return new TreeEndpoint(getResponseProperty(result, ANSWER_SDP,
-					String.class), getResponseProperty(result, SINK_ID,
+			return new TreeEndpoint(JsonTreeUtils.getResponseProperty(result,
+					ANSWER_SDP, String.class),
+					JsonTreeUtils.getResponseProperty(result, SINK_ID,
 							String.class));
 
 		} catch (JsonRpcErrorException e) {
@@ -193,31 +193,5 @@ public class KurentoTreeClient {
 		} else {
 			throw e;
 		}
-	}
-
-	@SuppressWarnings("unchecked")
-	public <T> T getResponseProperty(JsonElement result, String property,
-			Class<T> type) {
-
-		if (!(result instanceof JsonObject)) {
-			throw new JsonRpcException(
-					"Invalid response format. The response '" + result
-					+ "' should be a Json object");
-		}
-
-		JsonElement paramValue = ((JsonObject) result).get(property);
-		if (paramValue == null) {
-			throw new JsonRpcException("Invalid response lacking property '"
-					+ property + "'");
-		}
-
-		if (type == String.class) {
-			if (paramValue.isJsonPrimitive()) {
-				return (T) paramValue.getAsString();
-			}
-		}
-
-		throw new JsonRpcException("Property '" + property + " with value '"
-				+ paramValue + "' is not a String");
 	}
 }

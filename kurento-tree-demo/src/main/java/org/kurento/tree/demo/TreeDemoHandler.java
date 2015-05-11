@@ -72,6 +72,13 @@ public class TreeDemoHandler extends TextWebSocketHandler {
 	}
 
 	/**
+	 * This bean's 'initMethod'.
+	 */
+	public void init() {
+		this.notifThread.start();
+	}
+
+	/**
 	 * This bean's 'destroyMethod'.
 	 */
 	public void cleanup() {
@@ -212,7 +219,8 @@ public class TreeDemoHandler extends TextWebSocketHandler {
 
 			log.info("Releasing media pipeline");
 			kurentoTree.releaseTree(treeId);
-			treeId = null;
+			if (viewers.isEmpty())
+				treeId = null;
 			masterUserSession = null;
 
 		} else if (viewers.containsKey(sessionId)) {
@@ -222,6 +230,8 @@ public class TreeDemoHandler extends TextWebSocketHandler {
 				kurentoTree.removeTreeSink(treeId, sinkId);
 			}
 			viewers.remove(sessionId);
+			if (viewers.isEmpty())
+				treeId = null;
 		}
 	}
 
@@ -249,15 +259,18 @@ public class TreeDemoHandler extends TextWebSocketHandler {
 	}
 
 	private void internalSendNotification() throws InterruptedException {
+		log.info("Starting gathering candidates from server by polling blocking queue");
 		while (true) {
 			try {
 				IceCandidateInfo candidateInfo = kurentoTree
 						.getServerCandidate();
-				if (candidateInfo == null)
+				if (candidateInfo == null) {
+					log.info("Finished gathering candidates from server (notif thread exiting)");
 					return;
+				}
 				log.debug("Sending notification {}", candidateInfo);
 				WebSocketSession session = null;
-				if (candidateInfo.getTreeId() != treeId)
+				if (!candidateInfo.getTreeId().equals(treeId))
 					throw new TreeException(
 							"Unrecognized ice candidate info for current tree "
 									+ treeId + " : " + candidateInfo);

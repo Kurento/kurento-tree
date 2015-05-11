@@ -120,7 +120,9 @@ public class LessLoadedFixedTM extends AbstractNTreeTM {
 				}
 			}
 
-			return source.processSdpOffer(offerSdp);
+			String sdpAnswer = source.processSdpOffer(offerSdp);
+			source.gatherCandidates();
+			return sdpAnswer;
 		}
 
 		@Override
