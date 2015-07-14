@@ -1,13 +1,12 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
 		<groupId>org.kurento</groupId>
-		<artifactId>kurento-parent-pom</artifactId>
+		<artifactId>kurento-tree</artifactId>
 		<version>6.0.0-SNAPSHOT</version>
-		<relativePath>../../kurento-parent-pom</relativePath>
 	</parent>
-
 	<artifactId>kurento-tree-server</artifactId>
 	<packaging>jar</packaging>
 
@@ -31,9 +30,9 @@
 	</organization>
 
 	<scm>
-		<url>${kurento-java.scm.url}</url>
-		<connection>scm:git:${kurento-java.scm.connection}</connection>
-		<developerConnection>scm:git:${kurento-java.scm.connection}</developerConnection>
+		<url>${kurento-tree.scm.url}</url>
+		<connection>scm:git:${kurento-tree.scm.connection}</connection>
+		<developerConnection>scm:git:${kurento-tree.scm.connection}</developerConnection>
 		<tag>develop</tag>
 	</scm>
 
@@ -90,7 +89,9 @@
 						<phase>package</phase>
 						<configuration>
 							<tasks>
-								<copy file="${project.build.directory}/target/${project.artifactId}-${project.version}-bin.zip" tofile="${project.build.directory}/target/${project.artifactId}-${project.version}.zip" />
+								<copy
+									file="${project.build.directory}/target/${project.artifactId}-${project.version}-bin.zip"
+									tofile="${project.build.directory}/target/${project.artifactId}-${project.version}.zip" />
 							</tasks>
 						</configuration>
 					</execution>
