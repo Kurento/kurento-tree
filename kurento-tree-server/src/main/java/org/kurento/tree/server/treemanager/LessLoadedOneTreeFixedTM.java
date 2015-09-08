@@ -170,13 +170,15 @@ public class LessLoadedOneTreeFixedTM extends AbstractOneTreeTM {
 
 			if (pipeline.getKms().allowMoreElements()) {
 				String id = pipeline.getLabel() + "_"
-						+ (pipeline.getWebRtcs().size() - 1);
+						+ numSinks;
 				WebRtc webRtc = pipeline.createWebRtc(new TreeElementSession(
 						session, treeId, id));
 				pipeline.getPlumbers().get(0).connect(webRtc);
 				String sdpAnswer = webRtc.processSdpOffer(sdpOffer);
 				webRtc.gatherCandidates();
 				webRtc.setLabel("Sink " + numSinks + " (WR " + id + ")");
+				sinks.put(Integer.toString(numSinks), webRtc);
+				
 				result = new TreeEndpoint(sdpAnswer, id);
 			} else {
 				System.out.println("sss");
@@ -205,12 +207,7 @@ public class LessLoadedOneTreeFixedTM extends AbstractOneTreeTM {
 			this.sourcePipeline.getWebRtcs().get(numWebRtc).disconnect();
 
 		} else {
-			int numPipeline = Integer.parseInt(sinkIdTokens[0]);
-			int numWebRtc = Integer.parseInt(sinkIdTokens[1]);
-
-			WebRtc webRtc = this.leafPipelines.get(numPipeline).getWebRtcs()
-					.get(numWebRtc);
-			webRtc.release();
+			sinks.get(sinkIdTokens[1]).release();
 		}
 	}
 

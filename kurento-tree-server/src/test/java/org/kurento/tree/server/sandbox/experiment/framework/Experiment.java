@@ -69,10 +69,12 @@ public abstract class Experiment {
 
 		try {
 			String reportPath = System.getProperty("user.home")
-					+ "/Data/Kurento";
+					+ "/Data/Kurento/Tree";
 			new File(reportPath).mkdirs();
-			reportCreator.createReport(reportPath + "/treereport.html");
-			System.out.println("Report created in: " + reportPath);
+			String experimentName = this.getClass().getSimpleName();
+			String reportFilePath = reportPath + "/treereport_"+experimentName+".html";
+			reportCreator.createReport(reportFilePath);
+			System.out.println("Report created in: " + reportFilePath);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

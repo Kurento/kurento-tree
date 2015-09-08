@@ -6,12 +6,12 @@
 		<artifactId>kurento-tree</artifactId>
 		<version>6.1.1-SNAPSHOT</version>
 	</parent>
-	<artifactId>kurento-tree-client</artifactId>
+	<artifactId>kurento-tree-client-js</artifactId>
 	<packaging>jar</packaging>
 
 	<name>Kurento Tree Client</name>
 	<description>
-		Kurento Client for Kurento Tree Server.
+		Kurento JavaScript Client for Kurento Tree
 	</description>
 	<url>http://www.kurento.org/docs/${project.version}</url>
 
@@ -43,36 +43,67 @@
 			<organizationUrl>http://www.kurento.org</organizationUrl>
 		</developer>
 	</developers>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>bower</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>bower</executable>
+							<arguments>
+								<argument>install</argument>
+							</arguments>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			
+			<plugin>
+				<artifactId>maven-clean-plugin</artifactId>
+				<configuration>
+					<filesets>
+						<fileset>
+							<directory>src/main/resources/static/bower_components</directory>
+						</fileset>
+					</filesets>
+				</configuration>
+			</plugin>
+		</plugins>
+		
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+			</resource>
+			<resource>
+				<directory>.</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>bower.json</include>
+				</includes>
+			</resource>
+		</resources>
+	</build>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.kurento</groupId>
-			<artifactId>kurento-jsonrpc-server</artifactId>
+			<artifactId>kurento-jsonrpc-js</artifactId>
+			<version>5.0.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.kurento</groupId>
-			<artifactId>kurento-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.kurento</groupId>
-			<artifactId>kurento-commons-testing</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.kurento</groupId>
-			<artifactId>kurento-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-core</artifactId>
-			<scope>test</scope>
+			<artifactId>kurento-utils-js</artifactId>
 		</dependency>
 	</dependencies>
+
 
 </project>

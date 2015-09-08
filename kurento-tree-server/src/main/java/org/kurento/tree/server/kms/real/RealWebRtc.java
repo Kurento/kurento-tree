@@ -22,8 +22,10 @@ public class RealWebRtc extends WebRtc implements RealElement {
 
 	public RealWebRtc(RealPipeline pipeline, final TreeElementSession session) {
 		super(pipeline);
+		
 		this.webRtcEndpoint = new WebRtcEndpoint.Builder(
 				pipeline.getMediaPipeline()).build();
+		
 		this.webRtcEndpoint
 		.addOnIceCandidateListener(new EventListener<OnIceCandidateEvent>() {
 			@Override

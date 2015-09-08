@@ -54,7 +54,7 @@ public class OneSourceAddRemoveSinksUsage extends UsageSimulation {
 		} catch (TreeException e) {
 			System.out.println("Reached maximum tree capacity");
 		} catch (RuntimeException e) {
-			if (e.getMessage().equals(NUM_TREE_OPERATIONS_REACHED)) {
+			if (e.getMessage() != null && e.getMessage().equals(NUM_TREE_OPERATIONS_REACHED)) {
 				System.out.println(e.getMessage());
 			} else {
 				throw e;

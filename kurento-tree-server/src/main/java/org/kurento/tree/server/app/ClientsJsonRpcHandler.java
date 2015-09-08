@@ -168,7 +168,7 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 	}
 
-	public void onIceCandidate(Session session, Request<JsonObject> request) {
+	public void addIceCandidate(Session session, Request<JsonObject> request) {
 		try {
 			String candidate = JsonTreeUtils.getRequestParam(request, ICE_CANDIDATE,
 					String.class);

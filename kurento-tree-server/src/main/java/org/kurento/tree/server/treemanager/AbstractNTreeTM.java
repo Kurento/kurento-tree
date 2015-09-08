@@ -1,15 +1,20 @@
 package org.kurento.tree.server.treemanager;
 
 import java.util.UUID;
+
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.kurento.client.IceCandidate;
 import org.kurento.jsonrpc.Session;
 import org.kurento.tree.client.TreeEndpoint;
 import org.kurento.tree.client.TreeException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractNTreeTM implements TreeManager {
 
+	private static final Logger log = LoggerFactory.getLogger(AbstractNTreeTM.class);
+	
 	public abstract class TreeInfo {
 
 		public abstract void release();
@@ -81,10 +86,18 @@ public abstract class AbstractNTreeTM implements TreeManager {
 	public synchronized void createTree(String treeId)
 			throws TreeException {
 
+//		TreeInfo prevTreeInfo = trees.putIfAbsent(treeId, DUMMY_TREE_INFO);
+//		if (prevTreeInfo != null) {
+//			throw new TreeException("Tree with id '" + treeId
+//					+ "' already exists. Try another one");
+//		} else {
+//			trees.replace(treeId, createTreeInfo(treeId));
+//		}
+		
 		TreeInfo prevTreeInfo = trees.putIfAbsent(treeId, DUMMY_TREE_INFO);
 		if (prevTreeInfo != null) {
-			throw new TreeException("Tree with id '" + treeId
-					+ "' already exists. Try another one");
+			log.info("Creating an already created Tree with id '" + treeId
+					+ "'");
 		} else {
 			trees.replace(treeId, createTreeInfo(treeId));
 		}

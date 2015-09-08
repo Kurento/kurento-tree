@@ -8,7 +8,7 @@ public class ProtocolElements {
 	public static final String ADD_TREE_SINK_METHOD = "addTreeSink";
 	public static final String REMOVE_TREE_SOURCE_METHOD = "removeTreeSource";
 	public static final String REMOVE_TREE_SINK_METHOD = "removeTreeSink";
-	public static final String ON_ICE_CANDIDATE_METHOD = "onIceCandidate";
+	public static final String ADD_ICE_CANDIDATE_METHOD = "addIceCandidate";
 	public static final String ICE_CANDIDATE_EVENT = "iceCandidate";
 
 	public static final String SINK_ID = "sinkId";

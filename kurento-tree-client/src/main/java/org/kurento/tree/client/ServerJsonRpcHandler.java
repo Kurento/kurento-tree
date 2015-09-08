@@ -64,6 +64,7 @@ public class ServerJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	private void iceCandidateEvent(Transaction transaction,
 			Request<JsonObject> request) {
+		
 		String candidate = JsonTreeUtils.getRequestParam(request,
 				ICE_CANDIDATE, String.class);
 		String sdpMid = JsonTreeUtils.getRequestParam(request, ICE_SDP_MID,
@@ -71,12 +72,15 @@ public class ServerJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		int sdpMLineIndex = JsonTreeUtils.getRequestParam(request,
 				ICE_SDP_M_LINE_INDEX,
 				Integer.class);
+		
 		IceCandidate iceCandidate = new IceCandidate(candidate, sdpMid,
 				sdpMLineIndex);
+		
 		String treeId = JsonTreeUtils.getRequestParam(request, TREE_ID,
 				String.class);
 		String sinkId = JsonTreeUtils.getRequestParam(request, SINK_ID,
 				String.class, true);
+		
 		IceCandidateInfo eventInfo = new IceCandidateInfo(iceCandidate, treeId,
 				sinkId);
 

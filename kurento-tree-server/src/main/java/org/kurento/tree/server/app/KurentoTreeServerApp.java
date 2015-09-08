@@ -94,7 +94,7 @@ public class KurentoTreeServerApp implements JsonRpcConfigurer {
 
 	@Override
 	public void registerJsonRpcHandlers(JsonRpcHandlerRegistry registry) {
-		registry.addHandler(clientsJsonRpcHandler(),
+		registry.addHandler(clientsJsonRpcHandler().withSockJS(),
 				getProperty(WEBSOCKET_PATH_PROPERTY, WEBSOCKET_PATH_DEFAULT));
 		registry.addHandler(registrarJsonRpcHandler(), "/registrar");
 	}

@@ -7,7 +7,7 @@ import static org.kurento.tree.client.internal.ProtocolElements.ICE_CANDIDATE;
 import static org.kurento.tree.client.internal.ProtocolElements.ICE_SDP_MID;
 import static org.kurento.tree.client.internal.ProtocolElements.ICE_SDP_M_LINE_INDEX;
 import static org.kurento.tree.client.internal.ProtocolElements.OFFER_SDP;
-import static org.kurento.tree.client.internal.ProtocolElements.ON_ICE_CANDIDATE_METHOD;
+import static org.kurento.tree.client.internal.ProtocolElements.ADD_ICE_CANDIDATE_METHOD;
 import static org.kurento.tree.client.internal.ProtocolElements.RELEASE_TREE_METHOD;
 import static org.kurento.tree.client.internal.ProtocolElements.REMOVE_TREE_SINK_METHOD;
 import static org.kurento.tree.client.internal.ProtocolElements.REMOVE_TREE_SOURCE_METHOD;
@@ -181,7 +181,7 @@ public class KurentoTreeClient {
 		params.addProperty(ICE_SDP_M_LINE_INDEX, candidate.getSdpMLineIndex());
 		params.addProperty(ICE_SDP_MID, candidate.getSdpMid());
 		try {
-			client.sendRequest(ON_ICE_CANDIDATE_METHOD, params);
+			client.sendRequest(ADD_ICE_CANDIDATE_METHOD, params);
 		} catch (JsonRpcErrorException e) {
 			processException(e);
 		}
