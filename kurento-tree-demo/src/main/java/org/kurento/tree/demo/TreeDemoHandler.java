@@ -284,7 +284,7 @@ public class TreeDemoHandler extends TextWebSocketHandler {
 					// TODO improve, maybe keep sinkIds and sessionIds in a
 					// separate map
 					for (UserSession userSession : viewers.values())
-						if (userSession.getSinkId().equals(
+						if (candidateInfo.getSinkId() != null && userSession.getSinkId().equals(
 								candidateInfo.getSinkId())) {
 							session = userSession.getSession();
 							break;

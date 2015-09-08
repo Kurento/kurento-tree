@@ -34,7 +34,7 @@ public class KurentoTreeClient {
 	private ServerJsonRpcHandler handler;
 
 	public KurentoTreeClient(String wsUri) {
-		this(new JsonRpcClientWebSocket(wsUri));
+		this(new JsonRpcClientWebSocket(wsUri+"/websocket"));
 	}
 
 	public KurentoTreeClient(JsonRpcClient client) {
