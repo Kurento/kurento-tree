@@ -109,6 +109,10 @@ public class KurentoTreeServerApp implements JsonRpcConfigurer {
 	}
 
 	public static ConfigurableApplicationContext start() {
+		return start(-1);
+	}
+	
+	public static ConfigurableApplicationContext start(int port) {
 
 		ConfigFileManager.loadConfigFile("kurento-tree.conf.json");
 
@@ -117,8 +121,10 @@ public class KurentoTreeServerApp implements JsonRpcConfigurer {
 			System.setProperty("java.security.egd", "file:/dev/./urandom");
 		}
 
-		String port = getProperty(WEBSOCKET_PORT_PROPERTY,
-				WEBSOCKET_PORT_DEFAULT);
+		if(port == -1){
+			port = Integer.parseInt(getProperty(WEBSOCKET_PORT_PROPERTY,
+				WEBSOCKET_PORT_DEFAULT));
+		} 
 
 		SpringApplication application = new SpringApplication(
 				KurentoTreeServerApp.class);

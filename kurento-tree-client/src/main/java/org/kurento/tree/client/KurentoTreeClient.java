@@ -187,6 +187,10 @@ public class KurentoTreeClient {
 		}
 	}
 
+	public void close() throws IOException {
+		this.client.close();
+	}
+	
 	private void processException(JsonRpcErrorException e) throws TreeException {
 		if (e.getCode() == 2) {
 			throw new TreeException(e.getMessage());
