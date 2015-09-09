@@ -44,7 +44,7 @@ public class TreeDemoApp implements WebSocketConfigurer {
 	@Bean
 	public KurentoTreeClient kurentoTreeClient() {
 		return new KurentoTreeClient(System.getProperty("kts.ws.uri",
-				DEFAULT_KTS_WS_URI));
+				DEFAULT_KTS_WS_URI));	
 	}
 
 	@Override
