@@ -14,6 +14,10 @@ function KurentoTree(wsUri) {
     var sinkId;
     
     var webRtcPeer;
+    
+    var treeResponseReady = false;
+    var localIceCandidates = [];
+    var remoteIceCandidates = [];
 
     this.addTreeSink = function(treeId, options){
     	
@@ -100,15 +104,42 @@ function KurentoTree(wsUri) {
     				sinkId = response.sinkId;
     			}
     			
+    			console.log("Registered sinkId = "+sinkId);
+    			
     			webRtcPeer.processAnswer(sdp, function (error) {
     				if (error) return console.error (error);
     			});
+    			
+    			treeResponseReady = true;
+    	    	sendStoredCandidates();
     		}
     	});
     }
         
     function localOnIceCandidate(candidate) {
 		
+    	console.log("localOnIceCandidate");
+    	
+    	if(!treeResponseReady){
+    		console.log("Stored IceCandidate until response");
+    		localIceCandidates.push(candidate);    		
+    	} else {
+    		sendCandidate(candidate);
+    	}    	
+	}
+    
+    function sendStoredCandidates(){
+    	    	
+    	var i;
+    	for(i=0; i<localIceCandidates.length; i++){
+    		sendCandidate(localIceCandidates[i]);    		
+    	}
+    	
+    	localIceCandidates = [];
+    }
+    
+    function sendCandidate(candidate){
+    	
     	// FIXME have to make a copy to another object.
 		// see this bug
 		// https://code.google.com/p/chromium/issues/detail?id=468180
@@ -118,36 +149,31 @@ function KurentoTree(wsUri) {
 				sdpMLineIndex : candidate.sdpMLineIndex,
 				treeId : _treeId,
 				sinkId : sinkId
-		};
-
+		};   	
+    	
 		jsonrpcClient.send('addIceCandidate', copiedCandidate, function(error, result) {
 			if (error) {
 				requestErrorHandler(error, "onIceCandidate");
 			}
 		});
-	}
+
+    }
     
     function remoteOnIceCandidate(message) {
     	
-    	if (webRtcPeer) {
-    		
-        	var candidate = {
-        			candidate: message.candidate,
-        			sdpMid: message.sdpMid,
-        			sdpMLineIndex: message.sdpMLineIndex
-        	}
-        	
-    	    webRtcPeer.addIceCandidate(candidate, function (error) {
-    	    	if (error) {
-    	    		console.error("Error adding candidate: " + JSON.stringify(error));
-    	        	return;
-    	        }
-    	    });
-        	
-    	} else {
-    		console.error("WebRTC endpoint not initialized yet and already " +
-    				"receive an ICE candidate: " + message);
+    	var candidate = {
+    		candidate: message.candidate,
+    		sdpMid: message.sdpMid,
+    		sdpMLineIndex: message.sdpMLineIndex
     	}
+    	
+		webRtcPeer.addIceCandidate(candidate, function (error) {
+	    	if (error) {
+	    		console.error("Error adding candidate: " + JSON.stringify(error));
+	        	return;
+	        }
+	    });
+    	
     }
     
     function init(){

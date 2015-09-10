@@ -67,5 +67,9 @@ public abstract class Element extends KurentoObj {
 		pipeline.removeElement(this);
 		super.release();
 	}
+	
+	public String getId() {
+		return getLabel();
+	}
 
 }

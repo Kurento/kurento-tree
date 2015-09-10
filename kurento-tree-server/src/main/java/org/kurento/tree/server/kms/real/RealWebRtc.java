@@ -71,6 +71,9 @@ public class RealWebRtc extends WebRtc implements RealElement {
 
 	@Override
 	public void addIceCandidate(IceCandidate candidate) {
+		
+		log.info("########################## "+this.getId());
+		
 		webRtcEndpoint.addIceCandidate(candidate);
 	}
 
@@ -93,5 +96,10 @@ public class RealWebRtc extends WebRtc implements RealElement {
 		}
 		super.connect(element);
 		webRtcEndpoint.connect(((RealElement) element).getMediaElement());
+	}
+	
+	@Override
+	public String getId() {
+		return webRtcEndpoint.getId();
 	}
 }

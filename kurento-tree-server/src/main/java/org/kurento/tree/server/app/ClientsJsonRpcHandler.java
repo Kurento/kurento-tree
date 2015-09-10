@@ -31,8 +31,7 @@ import com.google.gson.JsonPrimitive;
 
 public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(ClientsJsonRpcHandler.class);
+	private static final Logger log = LoggerFactory.getLogger(ClientsJsonRpcHandler.class);
 
 	private TreeManager treeManager;
 
@@ -42,18 +41,15 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public void handleRequest(Transaction transaction,
-			Request<JsonObject> request) throws Exception {
+	public void handleRequest(Transaction transaction, Request<JsonObject> request) throws Exception {
 
 		Response<JsonElement> response = null;
 
 		try {
-			Method method = this.getClass().getMethod(request.getMethod(),
-					Session.class, Request.class);
+			Method method = this.getClass().getMethod(request.getMethod(), Session.class, Request.class);
 			Session session = transaction.getSession();
 
-			response = (Response<JsonElement>) method.invoke(this, session,
-					request);
+			response = (Response<JsonElement>) method.invoke(this, session, request);
 
 			if (response != null) {
 				response.setId(request.getId());
@@ -68,10 +64,8 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			transaction.sendError(e.getCause());
 
 		} catch (NoSuchMethodException e) {
-			log.error("Requesting unrecognized method '{}'",
-					request.getMethod());
-			transaction.sendError(1,
-					"Unrecognized method '" + request.getMethod() + "'", null);
+			log.error("Requesting unrecognized method '{}'", request.getMethod());
+			transaction.sendError(1, "Unrecognized method '" + request.getMethod() + "'", null);
 
 		} catch (Exception e) {
 			log.error("Exception processing request {}", request, e);
@@ -79,17 +73,13 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 	}
 
-	public Response<JsonElement> createTree(Session session,
-			Request<JsonObject> request)
-					throws TreeException {
+	public Response<JsonElement> createTree(Session session, Request<JsonObject> request) throws TreeException {
 
-		String treeId = JsonTreeUtils
-				.getRequestParam(request, TREE_ID, String.class, true);
+		String treeId = JsonTreeUtils.getRequestParam(request, TREE_ID, String.class, true);
 		try {
 			if (treeId == null) {
 				String newTreeId = treeManager.createTree();
-				return new Response<JsonElement>(null, new JsonPrimitive(
-						newTreeId));
+				return new Response<JsonElement>(null, new JsonPrimitive(newTreeId));
 			} else {
 				treeManager.createTree(treeId);
 				return null;
@@ -102,15 +92,13 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	public void releaseTree(Session session, Request<JsonObject> request) {
 		try {
-			treeManager.releaseTree(JsonTreeUtils.getRequestParam(request, TREE_ID,
-					String.class));
+			treeManager.releaseTree(JsonTreeUtils.getRequestParam(request, TREE_ID, String.class));
 		} catch (TreeException e) {
 			throw new JsonRpcErrorException(2, e.getMessage());
 		}
 	}
 
-	public Response<JsonElement> setTreeSource(Session session,
-			Request<JsonObject> request) {
+	public Response<JsonElement> setTreeSource(Session session, Request<JsonObject> request) {
 		try {
 			String sdp = treeManager.setTreeSource(session,
 					JsonTreeUtils.getRequestParam(request, TREE_ID, String.class),
@@ -126,12 +114,10 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 	}
 
-	public Response<JsonElement> addTreeSink(Session session,
-			Request<JsonObject> request) {
+	public Response<JsonElement> addTreeSink(Session session, Request<JsonObject> request) {
 		try {
-			log.info("Session: id {} , regInfo {} , class {}", session
-					.getSessionId(),
-					session.getRegisterInfo(), session.getClass().getName());
+			log.info("Session: id {} , regInfo {} , class {}", session.getSessionId(), session.getRegisterInfo(),
+					session.getClass().getName());
 			TreeEndpoint endpoint = treeManager.addTreeSink(session,
 					JsonTreeUtils.getRequestParam(request, TREE_ID, String.class),
 					JsonTreeUtils.getRequestParam(request, OFFER_SDP, String.class));
@@ -149,8 +135,7 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	public void removeTreeSource(Session session, Request<JsonObject> request) {
 		try {
-			treeManager.removeTreeSource(JsonTreeUtils.getRequestParam(request, TREE_ID,
-					String.class));
+			treeManager.removeTreeSource(JsonTreeUtils.getRequestParam(request, TREE_ID, String.class));
 
 		} catch (TreeException e) {
 			throw new JsonRpcErrorException(2, e.getMessage());
@@ -159,8 +144,7 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	public void removeTreeSink(Session session, Request<JsonObject> request) {
 		try {
-			treeManager.removeTreeSink(
-					JsonTreeUtils.getRequestParam(request, TREE_ID, String.class),
+			treeManager.removeTreeSink(JsonTreeUtils.getRequestParam(request, TREE_ID, String.class),
 					JsonTreeUtils.getRequestParam(request, SINK_ID, String.class));
 
 		} catch (TreeException e) {
@@ -170,22 +154,19 @@ public class ClientsJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	public void addIceCandidate(Session session, Request<JsonObject> request) {
 		try {
-			String candidate = JsonTreeUtils.getRequestParam(request, ICE_CANDIDATE,
-					String.class);
-			String sdpMid = JsonTreeUtils.getRequestParam(request, ICE_SDP_MID,
-					String.class);
-			int sdpMLineIndex = JsonTreeUtils.getRequestParam(request,
-					ICE_SDP_M_LINE_INDEX,
-					Integer.class);
-			IceCandidate iceCandidate = new IceCandidate(candidate, sdpMid,
-					sdpMLineIndex);
+			String candidate = JsonTreeUtils.getRequestParam(request, ICE_CANDIDATE, String.class);
+			String sdpMid = JsonTreeUtils.getRequestParam(request, ICE_SDP_MID, String.class);
+			int sdpMLineIndex = JsonTreeUtils.getRequestParam(request, ICE_SDP_M_LINE_INDEX, Integer.class);
+			IceCandidate iceCandidate = new IceCandidate(candidate, sdpMid, sdpMLineIndex);
 			String treeId = JsonTreeUtils.getRequestParam(request, TREE_ID, String.class);
-			String sinkId = JsonTreeUtils.getRequestParam(request, SINK_ID, String.class,
-					true);
-			if (sinkId != null)
+			String sinkId = JsonTreeUtils.getRequestParam(request, SINK_ID, String.class, true);
+			
+			if (sinkId != null) {
 				treeManager.addSinkIceCandidate(treeId, sinkId, iceCandidate);
-			else
+			} else {
 				treeManager.addTreeIceCandidate(treeId, iceCandidate);
+			}
+			
 		} catch (TreeException e) {
 			throw new JsonRpcErrorException(2, e.getMessage());
 		}

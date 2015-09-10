@@ -13,6 +13,8 @@ import org.kurento.tree.server.app.TreeElementSession;
 import org.kurento.tree.server.kms.Pipeline;
 import org.kurento.tree.server.kms.WebRtc;
 import org.kurento.tree.server.kmsmanager.KmsManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This TreeManager has the following characteristics:
@@ -26,6 +28,8 @@ import org.kurento.tree.server.kmsmanager.KmsManager;
  */
 public class OneKmsTM extends AbstractNTreeTM {
 
+	private static Logger log = LoggerFactory.getLogger(OneKmsTM.class);
+	
 	public class LessLoadedTreeInfo extends TreeInfo {
 
 		private Pipeline pipeline;
@@ -64,7 +68,10 @@ public class OneKmsTM extends AbstractNTreeTM {
 			}
 			source = pipeline.createWebRtc(new TreeElementSession(session,
 					treeId, null));
-			String sdpAnswer = source.processSdpOffer(offerSdp);
+			
+			log.info(">>>>> Created WebRtc {} for source of tree {}", source.getId(), treeId);
+			
+			String sdpAnswer = source.processSdpOffer(offerSdp);			
 			source.gatherCandidates();
 			return sdpAnswer;
 		}
@@ -82,6 +89,9 @@ public class OneKmsTM extends AbstractNTreeTM {
 				String id = UUID.randomUUID().toString();
 				WebRtc webRtc = pipeline.createWebRtc(new TreeElementSession(
 						session, treeId, id));
+				
+				log.info(">>>>> Created WebRtc {} for sink {} of tree {}", webRtc.getId(), id, treeId);
+				
 				source.connect(webRtc);
 				String sdpAnswer = webRtc.processSdpOffer(sdpOffer);
 				webRtc.gatherCandidates();
