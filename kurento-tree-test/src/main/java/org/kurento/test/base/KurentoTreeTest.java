@@ -29,8 +29,8 @@ import org.kurento.tree.client.KurentoTreeClient;
  */
 public class KurentoTreeTest extends BrowserKurentoClientTest {
 
-	final static String KTS_WS_URI_PROP = "kts.ws.uri";
-	final static String KTS_WS_URI_DEFAULT = "ws://localhost:8890/kurento-tree";
+	public final static String KTS_WS_URI_PROP = "kts.ws.uri";
+	public final static String KTS_WS_URI_DEFAULT = "ws://localhost:8890/kurento-tree";
 
 	protected static KurentoTreeClient kurentoTreeClient;
 
