@@ -43,20 +43,21 @@ public class KurentoTreeBrowser extends KurentoTestClient {
 		super(client);
 	}
 
-	public void setTreeSource(KurentoTreeClient kurentoTree, String treeId, WebRtcChannel channel, WebRtcMode mode)
+	public String setTreeSource(KurentoTreeClient kurentoTree, String treeId, WebRtcChannel channel, WebRtcMode mode)
 			throws InterruptedException {
-		internalTreeManagement(kurentoTree, treeId, channel, mode);
+		return internalTreeManagement(kurentoTree, treeId, channel, mode);
 	}
 
-	public void addTreeSink(KurentoTreeClient kurentoTree, String treeId, WebRtcChannel channel, WebRtcMode mode)
+	public String addTreeSink(KurentoTreeClient kurentoTree, String treeId, WebRtcChannel channel, WebRtcMode mode)
 			throws InterruptedException {
-		internalTreeManagement(kurentoTree, treeId, channel, mode);
+		return internalTreeManagement(kurentoTree, treeId, channel, mode);
 	}
 
 	@SuppressWarnings("deprecation")
-	public void internalTreeManagement(final KurentoTreeClient kurentoTree, final String treeId,
+	public String internalTreeManagement(final KurentoTreeClient kurentoTree, final String treeId,
 			final WebRtcChannel channel, final WebRtcMode mode) throws InterruptedException {
 
+		final String out[] = new String[1];
 		Thread notif = new Thread("notif") {
 			public void run() {
 				log.info("Starting gathering candidates from server by polling blocking queue");
@@ -95,6 +96,7 @@ public class KurentoTreeBrowser extends KurentoTestClient {
 							} else if (mode == WebRtcMode.RCV_ONLY) {
 								TreeEndpoint treeEndpoint = kurentoTree.addTreeSink(treeId, sdpOffer);
 								sdpAnswer = treeEndpoint.getSdp();
+								out[0] = treeEndpoint.getId();
 							}
 
 						} catch (Exception e) {
@@ -111,6 +113,8 @@ public class KurentoTreeBrowser extends KurentoTestClient {
 			t.interrupt();
 			t.stop();
 		}
+
+		return out[0];
 	}
 
 }

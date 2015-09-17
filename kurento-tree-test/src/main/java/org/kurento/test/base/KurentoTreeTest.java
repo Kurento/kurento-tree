@@ -18,8 +18,14 @@ import java.io.IOException;
 
 import org.junit.After;
 import org.junit.Before;
+import org.kurento.client.EventListener;
+import org.kurento.client.MediaPipeline;
+import org.kurento.client.OnIceCandidateEvent;
+import org.kurento.client.WebRtcEndpoint;
 import org.kurento.test.config.TestScenario;
 import org.kurento.tree.client.KurentoTreeClient;
+import org.kurento.tree.client.TreeEndpoint;
+import org.kurento.tree.client.TreeException;
 
 /**
  * Base for kurento-tree tests.
@@ -44,12 +50,12 @@ public class KurentoTreeTest extends BrowserKurentoClientTest {
 	}
 
 	@Before
-	public void setupKurentoClient() throws IOException {
+	public void setupTreeClient() throws IOException {
 		kurentoTreeClient = new KurentoTreeClient(System.getProperty(KTS_WS_URI_PROP, KTS_WS_URI_DEFAULT));
 	}
 
 	@After
-	public void teardownKurentoClient() throws Exception {
+	public void teardownTreeClient() throws Exception {
 		if (kurentoTreeClient != null) {
 			kurentoTreeClient.close();
 		}
@@ -63,6 +69,34 @@ public class KurentoTreeTest extends BrowserKurentoClientTest {
 	@Override
 	public KurentoTreeBrowser getBrowser(int index) {
 		return (KurentoTreeBrowser) super.getBrowser(index);
+	}
+
+	public void addFakeClients(int numMockClients, final KurentoTreeClient kurentoTree, final String treeId,
+			final String sinkId) throws TreeException, IOException {
+
+		MediaPipeline mockPipeline = fakeKurentoClient.createMediaPipeline();
+
+		for (int i = 0; i < numMockClients; i++) {
+			WebRtcEndpoint mockReceiver = new WebRtcEndpoint.Builder(mockPipeline).build();
+
+			mockReceiver.addOnIceCandidateListener(new EventListener<OnIceCandidateEvent>() {
+				@Override
+				public void onEvent(OnIceCandidateEvent event) {
+					try {
+						kurentoTree.addIceCandidate(treeId, sinkId, event.getCandidate());
+
+					} catch (Exception e) {
+						log.error("Exception adding candidate", e);
+					}
+				}
+			});
+
+			String sdpOffer = mockReceiver.generateOffer();
+			TreeEndpoint treeEndpoint = kurentoTree.addTreeSink(treeId, sdpOffer);
+			String sdpAnswer = treeEndpoint.getSdp();
+			mockReceiver.processAnswer(sdpAnswer);
+			mockReceiver.gatherCandidates();
+		}
 	}
 
 }
