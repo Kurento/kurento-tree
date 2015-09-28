@@ -37,10 +37,7 @@ import com.google.gson.JsonObject;
 public class KurentoTreeBrowser extends KurentoTestClient {
 
 	public KurentoTreeBrowser() {
-	}
-
-	public KurentoTreeBrowser(KurentoTreeBrowser client) {
-		super(client);
+		super();
 	}
 
 	public String setTreeSource(KurentoTreeClient kurentoTree, String treeId, WebRtcChannel channel, WebRtcMode mode)
