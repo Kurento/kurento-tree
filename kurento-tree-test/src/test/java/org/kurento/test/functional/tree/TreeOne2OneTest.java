@@ -22,8 +22,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
 import org.kurento.test.base.KurentoTreeTest;
-import org.kurento.test.client.WebRtcChannel;
-import org.kurento.test.client.WebRtcMode;
+import org.kurento.test.browser.WebRtcChannel;
+import org.kurento.test.browser.WebRtcMode;
 import org.kurento.test.config.TestScenario;
 import org.kurento.tree.client.KurentoTreeClient;
 
@@ -67,11 +67,11 @@ public class TreeOne2OneTest extends KurentoTreeTest {
 			kurentoTreeClientSink = new KurentoTreeClient(System.getProperty(KTS_WS_URI_PROP, KTS_WS_URI_DEFAULT));
 
 			// Starting tree source
-			getBrowser(0).setTreeSource(kurentoTreeClient, treeId, WebRtcChannel.AUDIO_AND_VIDEO, WebRtcMode.SEND_ONLY);
+			getPage(0).setTreeSource(kurentoTreeClient, treeId, WebRtcChannel.AUDIO_AND_VIDEO, WebRtcMode.SEND_ONLY);
 
 			// Starting tree sink
-			getBrowser(1).subscribeEvents("playing");
-			getBrowser(1).addTreeSink(kurentoTreeClientSink, treeId, WebRtcChannel.AUDIO_AND_VIDEO,
+			getPage(1).subscribeEvents("playing");
+			getPage(1).addTreeSink(kurentoTreeClientSink, treeId, WebRtcChannel.AUDIO_AND_VIDEO,
 					WebRtcMode.RCV_ONLY);
 
 			// Play the video
@@ -79,9 +79,9 @@ public class TreeOne2OneTest extends KurentoTreeTest {
 
 			// Assertions
 			Assert.assertTrue("Not received media (timeout waiting playing event)",
-					getBrowser(1).waitForEvent("playing"));
+					getPage(1).waitForEvent("playing"));
 			Assert.assertTrue("The color of the video should be green (RGB #008700)",
-					getBrowser(1).similarColor(CHROME_VIDEOTEST_COLOR));
+					getPage(1).similarColor(CHROME_VIDEOTEST_COLOR));
 
 		} finally {
 			if (kurentoTreeClientSink != null) {

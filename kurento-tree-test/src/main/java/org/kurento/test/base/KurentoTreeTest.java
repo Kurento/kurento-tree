@@ -33,20 +33,15 @@ import org.kurento.tree.client.TreeException;
  * @author Boni Garcia (bgarcia@gsyc.es)
  * @since 6.1.1
  */
-public class KurentoTreeTest extends BrowserKurentoClientTest {
+public class KurentoTreeTest extends KurentoClientWebPageTest<TreeTestPage> {
 
 	public final static String KTS_WS_URI_PROP = "kts.ws.uri";
 	public final static String KTS_WS_URI_DEFAULT = "ws://localhost:8890/kurento-tree";
 
 	protected static KurentoTreeClient kurentoTreeClient;
 
-	public KurentoTreeTest() {
-		super();
-	}
-
 	public KurentoTreeTest(TestScenario testScenario) {
 		super(testScenario);
-		this.setClient(new KurentoTreeBrowser());
 	}
 
 	@Before
@@ -59,16 +54,6 @@ public class KurentoTreeTest extends BrowserKurentoClientTest {
 		if (kurentoTreeClient != null) {
 			kurentoTreeClient.close();
 		}
-	}
-
-	@Override
-	public KurentoTreeBrowser getBrowser() {
-		return (KurentoTreeBrowser) super.getBrowser();
-	}
-
-	@Override
-	public KurentoTreeBrowser getBrowser(int index) {
-		return (KurentoTreeBrowser) super.getBrowser(index);
 	}
 
 	public void addFakeClients(int numMockClients, final KurentoTreeClient kurentoTree, final String treeId,

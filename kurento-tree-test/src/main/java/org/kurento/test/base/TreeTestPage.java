@@ -18,10 +18,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.kurento.jsonrpc.JsonUtils;
-import org.kurento.test.client.KurentoTestClient;
-import org.kurento.test.client.SdpOfferProcessor;
-import org.kurento.test.client.WebRtcChannel;
-import org.kurento.test.client.WebRtcMode;
+import org.kurento.test.browser.SdpOfferProcessor;
+import org.kurento.test.browser.WebRtcChannel;
+import org.kurento.test.browser.WebRtcMode;
+import org.kurento.test.browser.WebRtcTestPage;
 import org.kurento.tree.client.KurentoTreeClient;
 import org.kurento.tree.client.TreeEndpoint;
 import org.kurento.tree.client.internal.IceCandidateInfo;
@@ -34,9 +34,9 @@ import com.google.gson.JsonObject;
  * @author Boni Garcia (bgarcia@gsyc.es)
  * @since 6.1.1
  */
-public class KurentoTreeBrowser extends KurentoTestClient {
+public class TreeTestPage extends WebRtcTestPage {
 
-	public KurentoTreeBrowser() {
+	public TreeTestPage() {
 		super();
 	}
 
@@ -70,7 +70,7 @@ public class KurentoTreeBrowser extends KurentoTestClient {
 						JsonObject candidate = JsonUtils.toJsonObject(candidateInfo.getIceCandidate());
 						log.debug("Sending candidate {}", candidate);
 
-						browserClient.executeScript("addIceCandidate('" + candidate + "');");
+						browser.executeScript("addIceCandidate('" + candidate + "');");
 					} catch (Exception e) {
 						log.warn("Exception while processing ICE candidate and sending notification", e);
 					}
@@ -106,7 +106,7 @@ public class KurentoTreeBrowser extends KurentoTestClient {
 			}
 		};
 		t.start();
-		if (!latch.await(browserClient.getTimeout(), TimeUnit.SECONDS)) {
+		if (!latch.await(browser.getTimeout(), TimeUnit.SECONDS)) {
 			t.interrupt();
 			t.stop();
 		}

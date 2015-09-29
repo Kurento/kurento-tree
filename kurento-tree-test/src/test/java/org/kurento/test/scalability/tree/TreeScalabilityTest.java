@@ -27,13 +27,13 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
-import org.kurento.test.base.KurentoClientTest;
+import org.kurento.test.base.KurentoClientWebPageTest;
 import org.kurento.test.base.KurentoTreeTest;
-import org.kurento.test.client.BrowserClient;
-import org.kurento.test.client.BrowserType;
-import org.kurento.test.client.Client;
-import org.kurento.test.client.WebRtcChannel;
-import org.kurento.test.client.WebRtcMode;
+import org.kurento.test.browser.Browser;
+import org.kurento.test.browser.BrowserType;
+import org.kurento.test.browser.WebPageType;
+import org.kurento.test.browser.WebRtcChannel;
+import org.kurento.test.browser.WebRtcMode;
 import org.kurento.test.config.BrowserConfig;
 import org.kurento.test.config.BrowserScope;
 import org.kurento.test.config.TestScenario;
@@ -80,11 +80,11 @@ public class TreeScalabilityTest extends KurentoTreeTest {
 
 	@Parameters(name = "{index}: {0}")
 	public static Collection<Object[]> data() {
-		String videoPath = KurentoClientTest.getPathTestFiles() + "/video/15sec/rgbHD.y4m";
+		String videoPath = KurentoClientWebPageTest.getPathTestFiles() + "/video/15sec/rgbHD.y4m";
 		TestScenario test = new TestScenario();
-		test.addBrowser(BrowserConfig.BROWSER + 0, new BrowserClient.Builder().client(Client.WEBRTC)
+		test.addBrowser(BrowserConfig.BROWSER + 0, new Browser.Builder().webPageType(WebPageType.WEBRTC)
 				.browserType(BrowserType.CHROME).scope(BrowserScope.LOCAL).video(videoPath).build());
-		test.addBrowser(BrowserConfig.BROWSER + 1, new BrowserClient.Builder().client(Client.WEBRTC)
+		test.addBrowser(BrowserConfig.BROWSER + 1, new Browser.Builder().webPageType(WebPageType.WEBRTC)
 				.browserType(BrowserType.CHROME).scope(BrowserScope.LOCAL).build());
 
 		Collection<Object[]> out = new ArrayList<>();
@@ -107,11 +107,11 @@ public class TreeScalabilityTest extends KurentoTreeTest {
 			kurentoTreeClientSink = new KurentoTreeClient(System.getProperty(KTS_WS_URI_PROP, KTS_WS_URI_DEFAULT));
 
 			// Starting tree source
-			getBrowser(0).setTreeSource(kurentoTreeClient, treeId, WebRtcChannel.AUDIO_AND_VIDEO, WebRtcMode.SEND_ONLY);
+			getPage(0).setTreeSource(kurentoTreeClient, treeId, WebRtcChannel.AUDIO_AND_VIDEO, WebRtcMode.SEND_ONLY);
 
 			// Starting tree sink
-			getBrowser(1).subscribeEvents("playing");
-			String sinkId = getBrowser(1).addTreeSink(kurentoTreeClientSink, treeId, WebRtcChannel.AUDIO_AND_VIDEO,
+			getPage(1).subscribeEvents("playing");
+			String sinkId = getPage(1).addTreeSink(kurentoTreeClientSink, treeId, WebRtcChannel.AUDIO_AND_VIDEO,
 					WebRtcMode.RCV_ONLY);
 
 			// Fake clients
@@ -119,7 +119,7 @@ public class TreeScalabilityTest extends KurentoTreeTest {
 
 			// Latency assessment
 			final LatencyController cs = new LatencyController();
-			cs.checkRemoteLatency(playTime, TimeUnit.SECONDS, getBrowser(0), getBrowser(1));
+			cs.checkRemoteLatency(playTime, TimeUnit.SECONDS, getPage(0), getPage(1));
 			cs.drawChart(getDefaultOutputFile("-fakeClients" + fakeClients + ".png"), WIDTH, HEIGHT);
 			cs.writeCsv(getDefaultOutputFile("-fakeClients" + fakeClients + ".csv"));
 			cs.logLatencyErrorrs();
