@@ -12,12 +12,15 @@ import org.kurento.jsonrpc.Session;
 import org.kurento.tree.client.TreeEndpoint;
 import org.kurento.tree.client.TreeException;
 import org.kurento.tree.server.app.TreeElementSession;
+import org.kurento.tree.server.kms.Element;
 import org.kurento.tree.server.kms.Kms;
 import org.kurento.tree.server.kms.Pipeline;
 import org.kurento.tree.server.kms.Plumber;
 import org.kurento.tree.server.kms.WebRtc;
 import org.kurento.tree.server.kmsmanager.KmsManager;
 import org.kurento.tree.server.kmsmanager.KmsManager.KmsLoad;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This TreeManager has the following characteristics:
@@ -25,13 +28,16 @@ import org.kurento.tree.server.kmsmanager.KmsManager.KmsLoad;
  * <li>It allows N trees</li>
  * <li>Creates WebRtcEndpoint for sinks (viewers) in any node (including KMSs
  * with sources)</li>
- * <li>Fills less loaded node.</li>
+ * <li>Create source and sink webrtc in less loaded node.</li>
  * <li>It considers new KMSs after start.</li>
  * </ul>
  *
  * @author micael.gallego@gmail.com
  */
 public class LessLoadedElasticAllKMSsTM extends AbstractNTreeTM {
+
+	private static final Logger log = LoggerFactory
+			.getLogger(LessLoadedElasticAllKMSsTM.class);
 
 	public class LessLoadedTreeInfo extends TreeInfo {
 
@@ -103,19 +109,24 @@ public class LessLoadedElasticAllKMSsTM extends AbstractNTreeTM {
 			List<KmsLoad> kmss = kmsManager.getKmssSortedByLoad();
 
 			Kms selectedKms = kmss.get(0).getKms();
-			if (selectedKms == sourceKms) {
-				selectedKms = kmss.get(1).getKms();
-			}
 
 			Pipeline pipeline = getOrCreatePipeline(selectedKms);
 
 			if (pipeline.getKms().allowMoreElements()) {
+
 				String id = UUID.randomUUID().toString();
 				WebRtc webRtc = pipeline.createWebRtc(
 						new TreeElementSession(session, treeId, id));
-				pipeline.getPlumbers().get(0).connect(webRtc);
+
+				if (pipeline != sourcePipeline) {
+					pipeline.getPlumbers().get(0).connect(webRtc);
+				} else {
+					source.connect(webRtc);
+				}
+
 				String sdpAnswer = webRtc.processSdpOffer(sdpOffer);
 				webRtc.gatherCandidates();
+
 				webRtcsById.put(id, webRtc);
 				webRtc.setLabel("Sink " + id + ")");
 				return new TreeEndpoint(sdpAnswer, id);
@@ -149,15 +160,29 @@ public class LessLoadedElasticAllKMSsTM extends AbstractNTreeTM {
 		@Override
 		public void removeTreeSink(String sinkId) {
 			WebRtc webRtc = webRtcsById.get(sinkId);
-			Plumber plumber = (Plumber) webRtc.getSource();
+
+			Element elem = webRtc.getSource();
+
 			webRtc.release();
-			if (plumber.getSinks().isEmpty()) {
-				Plumber remotePlumber = plumber.getLinkedTo();
-				Pipeline pipeline = plumber.getPipeline();
-				ownPipelineByKms.remove(pipeline.getKms());
-				pipeline.release();
-				remotePlumber.release();
+
+			if (elem instanceof Plumber) {
+
+				Plumber plumber = (Plumber) elem;
+
+				if (plumber.getSinks().isEmpty()) {
+					log.info("------------------ Empty Plumber: " + sinkId);
+					Plumber remotePlumber = plumber.getLinkedTo();
+					Pipeline pipeline = plumber.getPipeline();
+					ownPipelineByKms.remove(pipeline.getKms());
+					pipeline.release();
+					remotePlumber.release();
+				} else {
+					log.info("------------------ Plumber: " + sinkId);
+				}
+			} else {
+				log.info("------------------ WebRtc: " + sinkId);
 			}
+
 		}
 
 		@Override
