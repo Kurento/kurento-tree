@@ -48,6 +48,9 @@
 	<properties>
 		<kurento-tree.scm.url>https://code.kurento.org/kurento-tree</kurento-tree.scm.url>
 		<kurento-tree.scm.connection>ssh://${user.name}@code.kurento.org:12345/kurento-tree</kurento-tree.scm.connection>
+		
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.source>1.8</maven.compiler.source>
 	</properties>
 
 	<modules>
