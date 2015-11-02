@@ -14,7 +14,8 @@ public class FakeElasticKmsManager extends KmsManager {
 	private int maxKmss;
 	private boolean ignoreFirstKmsInLoadMeasure;
 
-	public FakeElasticKmsManager(double meanLoadToGrow, int minKmss, int maxKmss) {
+	public FakeElasticKmsManager(double meanLoadToGrow, int minKmss,
+			int maxKmss) {
 		this(meanLoadToGrow, minKmss, maxKmss, null, true);
 	}
 
@@ -26,12 +27,12 @@ public class FakeElasticKmsManager extends KmsManager {
 		this.maxKmss = maxKmss;
 		this.ignoreFirstKmsInLoadMeasure = ignoreFirstKmsInLoadMeasure;
 		for (int i = 0; i < minKmss; i++) {
-			kmss.add(newKms());
+			kmss.add(newKms(i));
 		}
 	}
 
-	private Kms newKms() {
-		Kms kms = new Kms();
+	private Kms newKms(int num) {
+		Kms kms = new Kms("Kms " + num);
 		if (loadManager != null) {
 			kms.setLoadManager(loadManager);
 		}
@@ -62,7 +63,7 @@ public class FakeElasticKmsManager extends KmsManager {
 			double meanLoad = totalLoad / kmssToMean;
 			System.out.println("Mean load: " + meanLoad);
 			if (meanLoad > meanLoadToGrow) {
-				this.kmss.add(newKms());
+				this.kmss.add(newKms(kmss.size()));
 			}
 		}
 	}

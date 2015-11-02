@@ -49,4 +49,9 @@ public class Kms extends KurentoObj {
 		this.pipelines.remove(pipeline);
 	}
 
+	@Override
+	public String toString() {
+		return getLabel();
+	}
+
 }
