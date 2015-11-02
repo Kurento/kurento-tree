@@ -75,8 +75,7 @@ public class KmsTopologyGrapher {
 		for (Kms kms : kmss) {
 
 			if (kms.getPipelines().isEmpty()) {
-				gv.addln("         \""
-						+ labels.get(kms)
+				gv.addln("         \"" + labels.get(kms)
 						+ "\" [shape=rectangle, fillcolor=white, style=filled];");
 			} else {
 
@@ -129,7 +128,8 @@ public class KmsTopologyGrapher {
 			if (!connectedPlumbers.contains(plumber)
 					&& plumber.getLinkedTo() != null) {
 				gv.addln("   \"" + labels.get(plumber) + "\" -> \""
-						+ labels.get(plumber.getLinkedTo()) + "\";");
+						+ labels.get(plumber.getLinkedTo())
+						+ "\" [arrowhead=none];");
 				connectedPlumbers.add(plumber);
 				connectedPlumbers.add(plumber.getLinkedTo());
 			}
@@ -157,19 +157,15 @@ public class KmsTopologyGrapher {
 
 				int numWebRtc = 0;
 				for (WebRtc webRtc : pipeline.getWebRtcs()) {
-					labels.put(
-							webRtc,
-							getWebRtcLabel(webRtc, numKms, numPipeline,
-									numWebRtc));
+					labels.put(webRtc, getWebRtcLabel(webRtc, numKms,
+							numPipeline, numWebRtc));
 					numWebRtc++;
 				}
 
 				int numPlumber = 0;
 				for (Plumber plumber : pipeline.getPlumbers()) {
-					labels.put(
-							plumber,
-							getPlumberLabel(plumber, numKms, numPipeline,
-									numPlumber));
+					labels.put(plumber, getPlumberLabel(plumber, numKms,
+							numPipeline, numPlumber));
 					numPlumber++;
 				}
 				numPipeline++;

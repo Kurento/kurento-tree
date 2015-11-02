@@ -1,7 +1,6 @@
 package org.kurento.tree.server.treemanager;
 
 import java.util.UUID;
-
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.kurento.client.IceCandidate;
@@ -13,8 +12,9 @@ import org.slf4j.LoggerFactory;
 
 public abstract class AbstractNTreeTM implements TreeManager {
 
-	private static final Logger log = LoggerFactory.getLogger(AbstractNTreeTM.class);
-	
+	private static final Logger log = LoggerFactory
+			.getLogger(AbstractNTreeTM.class);
+
 	public abstract class TreeInfo {
 
 		public abstract void release();
@@ -83,17 +83,8 @@ public abstract class AbstractNTreeTM implements TreeManager {
 	protected abstract TreeInfo createTreeInfo(String treeId);
 
 	@Override
-	public synchronized void createTree(String treeId)
-			throws TreeException {
+	public synchronized void createTree(String treeId) throws TreeException {
 
-//		TreeInfo prevTreeInfo = trees.putIfAbsent(treeId, DUMMY_TREE_INFO);
-//		if (prevTreeInfo != null) {
-//			throw new TreeException("Tree with id '" + treeId
-//					+ "' already exists. Try another one");
-//		} else {
-//			trees.replace(treeId, createTreeInfo(treeId));
-//		}
-		
 		TreeInfo prevTreeInfo = trees.putIfAbsent(treeId, DUMMY_TREE_INFO);
 		if (prevTreeInfo != null) {
 			log.info("Creating an already created Tree with id '" + treeId
@@ -122,8 +113,8 @@ public abstract class AbstractNTreeTM implements TreeManager {
 	}
 
 	@Override
-	public synchronized TreeEndpoint addTreeSink(Session session,
-			String treeId, String sdpOffer) throws TreeException {
+	public synchronized TreeEndpoint addTreeSink(Session session, String treeId,
+			String sdpOffer) throws TreeException {
 		return getTreeInfo(treeId).addTreeSink(session, sdpOffer);
 	}
 

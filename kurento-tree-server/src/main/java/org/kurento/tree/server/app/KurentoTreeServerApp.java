@@ -49,7 +49,7 @@ public class KurentoTreeServerApp implements JsonRpcConfigurer {
 	public static final String KMSS_URIS_PROPERTY = "kms.uris";
 	public static final String KMSS_URIS_DEFAULT = "[ \"ws://localhost:8888/kurento\" ]";
 
-	private static ConfigurableApplicationContext context;
+	private static ConfigurableApplicationContext app;
 
 	@Bean
 	public KmsManager kmsManager() {
@@ -87,7 +87,8 @@ public class KurentoTreeServerApp implements JsonRpcConfigurer {
 		if (kmsManager instanceof KmsRegistrar) {
 			return (KmsRegistrar) kmsManager;
 		} else {
-			log.warn("Kurento Tree server is using a DummyRegistrar. New KMSs will be ignored");
+			log.warn(
+					"Kurento Tree server is using a DummyRegistrar. New KMSs will be ignored");
 			return new DummyRegistrar();
 		}
 	}
@@ -111,7 +112,7 @@ public class KurentoTreeServerApp implements JsonRpcConfigurer {
 	public static ConfigurableApplicationContext start() {
 		return start(-1);
 	}
-	
+
 	public static ConfigurableApplicationContext start(int port) {
 
 		ConfigFileManager.loadConfigFile("kurento-tree.conf.json");
@@ -121,10 +122,10 @@ public class KurentoTreeServerApp implements JsonRpcConfigurer {
 			System.setProperty("java.security.egd", "file:/dev/./urandom");
 		}
 
-		if(port == -1){
+		if (port == -1) {
 			port = Integer.parseInt(getProperty(WEBSOCKET_PORT_PROPERTY,
-				WEBSOCKET_PORT_DEFAULT));
-		} 
+					WEBSOCKET_PORT_DEFAULT));
+		}
 
 		SpringApplication application = new SpringApplication(
 				KurentoTreeServerApp.class);
@@ -133,15 +134,17 @@ public class KurentoTreeServerApp implements JsonRpcConfigurer {
 		properties.put("server.port", port);
 		application.setDefaultProperties(properties);
 
-		return application.run();
+		app = application.run();
+
+		return app;
+	}
+
+	public static void stop() {
+		app.close();
 	}
 
 	public static void main(String[] args) throws Exception {
 		start();
-	}
-
-	public static void stop() {
-
 	}
 
 }
