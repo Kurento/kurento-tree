@@ -52,7 +52,9 @@ public class LessLoadedOnlySourceTM extends AbstractNTreeTM {
 		// number of sinks are connected. If value is 1, all new sinks can be
 		// connected but their latency can be big if several KMSs are connected
 		// from source to sink.
-		private static final int RESERVED_WR_TO_CONNECT_KMS = 1;
+		// TODO It is better to create webrtc in advance. If not, elastic system
+		// doesn't consider this KMS loaded and not ask a new one.
+		private static final int RESERVED_WR_TO_CONNECT_KMS = 0;
 
 		private String treeId;
 
@@ -144,6 +146,8 @@ public class LessLoadedOnlySourceTM extends AbstractNTreeTM {
 			} else {
 				remainingHoles.get(sourceKms).addAndGet(1);
 
+				// TODO Select KMS only if a new webrtc is possible. Take
+				// account that RESERVED is available.
 				selectedKms = selectKmsForSink(selectedKms);
 			}
 

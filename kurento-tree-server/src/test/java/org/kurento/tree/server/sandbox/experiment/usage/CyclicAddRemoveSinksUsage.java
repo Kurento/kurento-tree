@@ -18,12 +18,15 @@ public class CyclicAddRemoveSinksUsage extends UsageSimulation {
 		private boolean created = false;
 		private boolean growing = true;
 		private int iteration = 0;
+		private int createIteration = 0;
 		private List<String> sinks = new ArrayList<String>();
+		private int iterationsToCreate;
 
 		public TreeUsage(int numTree, TreeManager treeManager, int iterations,
-				int maxSinksPerTree) {
+				int maxSinksPerTree, int iterationsToCreate) {
 			this.treeManager = treeManager;
 			this.iterations = iterations;
+			this.iterationsToCreate = iterationsToCreate;
 			this.maxSinksPerTree = maxSinksPerTree;
 			this.treeId = getTreeId(numTree);
 		}
@@ -31,15 +34,24 @@ public class CyclicAddRemoveSinksUsage extends UsageSimulation {
 		public void evolve() {
 
 			try {
+
 				if (!created) {
-					treeManager.createTree(treeId);
-					treeManager.setTreeSource(null, treeId, "XXX");
-					created = true;
+
+					if (createIteration < iterationsToCreate) {
+
+						createIteration++;
+
+					} else {
+
+						treeManager.createTree(treeId);
+						treeManager.setTreeSource(null, treeId, "XXX");
+						created = true;
+					}
 
 				} else if (growing) {
 
-					String sinkId = treeManager.addTreeSink(null, treeId,
-							"fakeSdp").getId();
+					String sinkId = treeManager
+							.addTreeSink(null, treeId, "fakeSdp").getId();
 					sinks.add(treeId + "|" + sinkId);
 
 					if (sinks.size() == maxSinksPerTree) {
@@ -75,17 +87,19 @@ public class CyclicAddRemoveSinksUsage extends UsageSimulation {
 	private int maxSinksPerTree;
 	private int iterations;
 	private long randomSeed;
+	private int iterationsToCreate;
 
 	public CyclicAddRemoveSinksUsage(int numTrees, int maxSinksPerTree,
-			int iterations, long randomSeed) {
+			int iterations, long randomSeed, int iterationsToCreate) {
 		this.numTrees = numTrees;
 		this.maxSinksPerTree = maxSinksPerTree;
 		this.iterations = iterations;
 		this.randomSeed = randomSeed;
+		this.iterationsToCreate = iterationsToCreate;
 	}
 
 	public CyclicAddRemoveSinksUsage() {
-		this(4, 5, 3, 0);
+		this(4, 5, 3, 0, 2);
 	}
 
 	@Override
@@ -95,7 +109,7 @@ public class CyclicAddRemoveSinksUsage extends UsageSimulation {
 
 		for (int i = 0; i < numTrees; i++) {
 			trees.add(new TreeUsage(i, treeManager, this.iterations,
-					this.maxSinksPerTree));
+					this.maxSinksPerTree, i * this.iterationsToCreate));
 		}
 
 		Random r = null;

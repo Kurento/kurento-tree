@@ -1,32 +1,34 @@
 package org.kurento.tree.server.sandbox.experiment;
 
-import org.kurento.tree.server.kms.loadmanager.MaxWebRtcLoadManager;
-import org.kurento.tree.server.kmsmanager.FakeElasticKmsManager;
 import org.kurento.tree.server.kmsmanager.KmsManager;
+import org.kurento.tree.server.kmsmanager.ReserveKmsManager;
 import org.kurento.tree.server.sandbox.experiment.framework.Experiment;
 import org.kurento.tree.server.sandbox.experiment.framework.TreeManagerCreator;
 import org.kurento.tree.server.sandbox.experiment.usage.CyclicAddRemoveSinksUsage;
-import org.kurento.tree.server.treemanager.LessLoadedElasticTM;
+import org.kurento.tree.server.treemanager.LessLoadedOnlySourceTM;
 import org.kurento.tree.server.treemanager.TreeManager;
 
-public class Experiment5 extends Experiment {
+public class Experiment8 extends Experiment {
 
 	public void configureExperiment() {
 
-		setKmsManager(new FakeElasticKmsManager(0.8, 2, 10,
-				new MaxWebRtcLoadManager(5), true));
+		System.setProperty("kms.maxWebrtc", "12");
+		System.setProperty("kms.real", "false");
+		System.setProperty("kms.avgLoadToNewKms", "0.6");
 
-		addUsageSimulation(new CyclicAddRemoveSinksUsage(3, 5, 2, -1, 0));
+		setKmsManager(new ReserveKmsManager());
+
+		addUsageSimulation(new CyclicAddRemoveSinksUsage(3, 5, 2, -1, 3));
 
 		addTreeManagerCreator(new TreeManagerCreator() {
 			@Override
 			public TreeManager createTreeManager(KmsManager kmsManager) {
-				return new LessLoadedElasticTM(kmsManager);
+				return new LessLoadedOnlySourceTM(kmsManager, 8);
 			}
 		});
 	}
 
 	public static void main(String[] args) {
-		new Experiment5().run();
+		new Experiment8().run();
 	}
 }

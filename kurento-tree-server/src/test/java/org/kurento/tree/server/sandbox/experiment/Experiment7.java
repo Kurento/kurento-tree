@@ -16,7 +16,7 @@ public class Experiment7 extends Experiment {
 		setKmsManager(new FakeElasticKmsManager(0.3, 2, 10,
 				new MaxWebRtcLoadManager(12), true));
 
-		addUsageSimulation(new CyclicAddRemoveSinksUsage(3, 5, 2, -1));
+		addUsageSimulation(new CyclicAddRemoveSinksUsage(3, 5, 2, -1, 0));
 
 		addTreeManagerCreator(new TreeManagerCreator() {
 			@Override
