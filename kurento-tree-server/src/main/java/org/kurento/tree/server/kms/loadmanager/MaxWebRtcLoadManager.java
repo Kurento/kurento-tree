@@ -25,6 +25,7 @@ public class MaxWebRtcLoadManager implements LoadManager {
 		int numWebRtcs = 0;
 		for (Pipeline pipeline : kms.getPipelines()) {
 			numWebRtcs += pipeline.getWebRtcs().size();
+			numWebRtcs += pipeline.getPlumbers().size();
 		}
 		return numWebRtcs;
 	}

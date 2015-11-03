@@ -12,9 +12,9 @@ public class Experiment8 extends Experiment {
 
 	public void configureExperiment() {
 
-		System.setProperty("kms.maxWebrtc", "12");
+		System.setProperty("kms.maxWebrtc", "8");
 		System.setProperty("kms.real", "false");
-		System.setProperty("kms.avgLoadToNewKms", "0.6");
+		System.setProperty("kms.avgLoadToNewKms", "0.9");
 
 		setKmsManager(new ReserveKmsManager());
 
@@ -23,7 +23,7 @@ public class Experiment8 extends Experiment {
 		addTreeManagerCreator(new TreeManagerCreator() {
 			@Override
 			public TreeManager createTreeManager(KmsManager kmsManager) {
-				return new LessLoadedOnlySourceTM(kmsManager, 8);
+				return new LessLoadedOnlySourceTM(kmsManager);
 			}
 		});
 	}

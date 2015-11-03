@@ -13,7 +13,7 @@ import org.kurento.tree.server.kms.real.RealKms;
 
 public class ReserveKmsManager extends KmsManager {
 
-	private static final int KMS_MAX_WEBRTC = PropertiesManager
+	public static final int KMS_MAX_WEBRTC = PropertiesManager
 			.getProperty("kms.maxWebrtc", 50);
 
 	private static final boolean REAL_KMS = PropertiesManager
