@@ -8,16 +8,17 @@ import org.kurento.client.KurentoClient;
 import org.kurento.client.Properties;
 import org.kurento.commons.PropertiesManager;
 import org.kurento.tree.server.kms.Kms;
+import org.kurento.tree.server.kms.Pipeline;
 import org.kurento.tree.server.kms.loadmanager.MaxWebRtcLoadManager;
 import org.kurento.tree.server.kms.real.RealKms;
 import org.kurento.tree.server.treemanager.KmsListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ReserveKmsManager extends KmsManager {
+public class MinWebRtcEpsKmsManager extends KmsManager {
 
 	private static final Logger log = LoggerFactory
-			.getLogger(ReserveKmsManager.class);
+			.getLogger(MinWebRtcEpsKmsManager.class);
 
 	public static final int KMS_MAX_WEBRTC = PropertiesManager
 			.getProperty("kms.maxWebrtc", 50);
@@ -25,14 +26,14 @@ public class ReserveKmsManager extends KmsManager {
 	private static final boolean REAL_KMS = PropertiesManager
 			.getProperty("kms.real", true);
 
-	private static final double AVG_LOAD_TO_NEW_KMS = PropertiesManager
-			.getProperty("kms.avgLoadToNewKms", 0.8);
+	private static final int KMS_MIN_FREE_SPACE = PropertiesManager
+			.getProperty("kms.minFreeSpace", 3);
 
 	private List<Kms> kmss = new ArrayList<>();
 
 	private KmsListener kmsListener;
 
-	public ReserveKmsManager() {
+	public MinWebRtcEpsKmsManager() {
 		addKms();
 	}
 
@@ -62,41 +63,46 @@ public class ReserveKmsManager extends KmsManager {
 		return kmss;
 	}
 
+	private int countWebRtcsAndPlumbers(Kms kms) {
+		int count = 0;
+		for (Pipeline pipeline : kms.getPipelines()) {
+			count += pipeline.getWebRtcs().size();
+			count += pipeline.getPlumbers().size();
+		}
+		return count;
+	}
+
 	private void checkLoadAndUpdateKmss() {
 
 		Iterator<Kms> it = kmss.iterator();
 
-		double loadSum = 0;
-		int numKms = 0;
+		boolean minSpaceKmsFound = false;
 
 		List<Kms> removedKmss = new ArrayList<Kms>();
 
 		while (it.hasNext()) {
 			Kms kms = it.next();
 
-			double load = kms.getLoad();
+			int count = countWebRtcsAndPlumbers(kms);
 
-			if (load == 0) {
-				if (kmss.size() > 1) {
-					it.remove();
-					removedKmss.add(kms);
-				}
-			} else {
-				loadSum += load;
-				numKms++;
+			if (count > 0 && KMS_MAX_WEBRTC - count >= KMS_MIN_FREE_SPACE) {
+				minSpaceKmsFound = true;
+			}
+
+			if (count == 0 && kmss.size() > 1) {
+				it.remove();
+				removedKmss.add(kms);
 			}
 		}
 
-		while (loadSum / numKms >= AVG_LOAD_TO_NEW_KMS) {
-
+		if (!minSpaceKmsFound) {
 			if (removedKmss.size() > 0) {
 				Kms kms = removedKmss.remove(0);
 				kmss.add(kms);
 			} else {
-				log.info("Creating new Kms for avg load {}", loadSum / numKms);
+				log.info("Creating new Kms");
 				addKms();
 			}
-			numKms++;
 		}
 
 		for (Kms kms : removedKmss) {

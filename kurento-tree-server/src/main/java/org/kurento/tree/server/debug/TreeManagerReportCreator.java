@@ -24,6 +24,7 @@ public class TreeManagerReportCreator implements TreeManager {
 
 	private Path reportPath;
 	private PrintWriter writer;
+	private int step = 1;
 
 	public TreeManagerReportCreator(KmsManager manager, String name) {
 		this.kmsManager = manager;
@@ -81,13 +82,17 @@ public class TreeManagerReportCreator implements TreeManager {
 	// Report generation operations
 
 	private void includeOperation(String operation) {
-		writer.println("<p>" + operation + "</p>");
-		System.out.println(operation);
+		writer.println("<p>Step " + step + ": " + operation + "</p>");
+		System.out.println("Step " + step + ": " + operation);
+		System.out.println(
+				"---------------------------------------------------------------------------------------------------------------------------------------");
+		step++;
+		includeTreeManagerSnapshot();
 	}
 
 	private void includeTreeManagerSnapshot() {
-		writer.println(KmsTopologyGrapher.createSvgTopologyGrapher(kmsManager,
-				false));
+		writer.println(
+				KmsTopologyGrapher.createSvgTopologyGrapher(kmsManager, false));
 	}
 
 	// TreeManager API
@@ -96,7 +101,6 @@ public class TreeManagerReportCreator implements TreeManager {
 	public String createTree() throws TreeException {
 		String treeId = treeManager.createTree();
 		includeOperation("createTree() -> " + treeId);
-		includeTreeManagerSnapshot();
 		return treeId;
 	}
 
@@ -104,7 +108,6 @@ public class TreeManagerReportCreator implements TreeManager {
 	public void releaseTree(String treeId) throws TreeException {
 		treeManager.releaseTree(treeId);
 		includeOperation("releaseTree(" + treeId + ")");
-		includeTreeManagerSnapshot();
 	}
 
 	@Override
@@ -113,7 +116,6 @@ public class TreeManagerReportCreator implements TreeManager {
 		String answerSdp = treeManager.setTreeSource(session, treeId, sdpOffer);
 		includeOperation("setTreeSource(" + treeId + "," + sdpOffer + ") -> "
 				+ answerSdp);
-		includeTreeManagerSnapshot();
 		return answerSdp;
 	}
 
@@ -121,19 +123,16 @@ public class TreeManagerReportCreator implements TreeManager {
 	public void removeTreeSource(String treeId) throws TreeException {
 		treeManager.removeTreeSource(treeId);
 		includeOperation("removeTreeSource(" + treeId + ")");
-		includeTreeManagerSnapshot();
 	}
 
 	@Override
 	public TreeEndpoint addTreeSink(Session session, String treeId,
-			String sdpOffer)
-					throws TreeException {
+			String sdpOffer) throws TreeException {
 		TreeEndpoint endpoint = treeManager.addTreeSink(session, treeId,
 				sdpOffer);
 		includeOperation("addTreeSink(" + treeId + "," + sdpOffer + ") -> "
 				+ "sdp = " + endpoint.getSdp() + " , sinkId = "
 				+ endpoint.getId());
-		includeTreeManagerSnapshot();
 		return endpoint;
 	}
 
@@ -142,7 +141,6 @@ public class TreeManagerReportCreator implements TreeManager {
 			throws TreeException {
 		treeManager.removeTreeSink(treeId, sinkId);
 		includeOperation("removeTreeSink(" + treeId + "," + sinkId + ")");
-		includeTreeManagerSnapshot();
 	}
 
 	@Override
@@ -158,7 +156,6 @@ public class TreeManagerReportCreator implements TreeManager {
 	public void createTree(String treeId) throws TreeException {
 		treeManager.createTree(treeId);
 		includeOperation("createTree(" + treeId + ")");
-		includeTreeManagerSnapshot();
 	}
 
 	@Override
@@ -167,7 +164,6 @@ public class TreeManagerReportCreator implements TreeManager {
 		treeManager.addSinkIceCandidate(treeId, sinkId, iceCandidate);
 		includeOperation("addSinkIceCandidate(" + treeId + "," + sinkId + ","
 				+ iceCandidate.getCandidate() + ")");
-		includeTreeManagerSnapshot();
 	}
 
 	@Override
@@ -175,7 +171,6 @@ public class TreeManagerReportCreator implements TreeManager {
 		treeManager.addTreeIceCandidate(treeId, iceCandidate);
 		includeOperation("addTreeIceCandidate(" + treeId + ","
 				+ iceCandidate.getCandidate() + ")");
-		includeTreeManagerSnapshot();
 	}
 
 }
