@@ -35,4 +35,10 @@ public class RealPipeline extends Pipeline {
 		mediaPipeline.release();
 	}
 
+	@Override
+	public void setLabel(String label) {
+		super.setLabel(label);
+		mediaPipeline.setName(label);
+	}
+
 }

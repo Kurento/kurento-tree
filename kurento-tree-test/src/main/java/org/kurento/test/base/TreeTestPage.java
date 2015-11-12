@@ -14,11 +14,8 @@
  */
 package org.kurento.test.base;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
+import org.kurento.client.IceCandidate;
 import org.kurento.jsonrpc.JsonUtils;
-import org.kurento.test.browser.SdpOfferProcessor;
 import org.kurento.test.browser.WebRtcChannel;
 import org.kurento.test.browser.WebRtcMode;
 import org.kurento.test.browser.WebRtcTestPage;
@@ -27,6 +24,8 @@ import org.kurento.tree.client.TreeEndpoint;
 import org.kurento.tree.client.internal.IceCandidateInfo;
 
 import com.google.gson.JsonObject;
+
+import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
 
 /**
  * Specific browser page for kurento-tree tests.
@@ -40,78 +39,104 @@ public class TreeTestPage extends WebRtcTestPage {
 		super();
 	}
 
-	public String setTreeSource(KurentoTreeClient kurentoTree, String treeId, WebRtcChannel channel, WebRtcMode mode)
-			throws InterruptedException {
+	public String setTreeSource(KurentoTreeClient kurentoTree, String treeId,
+			WebRtcChannel channel, WebRtcMode mode)
+					throws InterruptedException {
 		return internalTreeManagement(kurentoTree, treeId, channel, mode);
 	}
 
-	public String addTreeSink(KurentoTreeClient kurentoTree, String treeId, WebRtcChannel channel, WebRtcMode mode)
-			throws InterruptedException {
+	public String addTreeSink(KurentoTreeClient kurentoTree, String treeId,
+			WebRtcChannel channel, WebRtcMode mode)
+					throws InterruptedException {
 		return internalTreeManagement(kurentoTree, treeId, channel, mode);
 	}
 
-	@SuppressWarnings("deprecation")
-	public String internalTreeManagement(final KurentoTreeClient kurentoTree, final String treeId,
-			final WebRtcChannel channel, final WebRtcMode mode) throws InterruptedException {
+	private void retrieveIceCandidates(KurentoTreeClient kurentoTree) {
 
-		final String out[] = new String[1];
-		Thread notif = new Thread("notif") {
-			public void run() {
-				log.info("Starting gathering candidates from server by polling blocking queue");
-				while (true) {
-					try {
-						IceCandidateInfo candidateInfo = kurentoTree.getServerCandidate();
+		log.info(
+				"Starting gathering candidates from server by polling blocking queue");
 
-						if (candidateInfo == null) {
-							log.info("Finished gathering candidates from server (notif thread exiting)");
-							return;
-						}
+		while (true) {
+			try {
+				IceCandidateInfo candidateInfo = kurentoTree
+						.getServerCandidate();
 
-						JsonObject candidate = JsonUtils.toJsonObject(candidateInfo.getIceCandidate());
-						log.debug("Sending candidate {}", candidate);
-
-						browser.executeScript("addIceCandidate('" + candidate + "');");
-					} catch (Exception e) {
-						log.warn("Exception while processing ICE candidate and sending notification", e);
-					}
+				if (candidateInfo == null) {
+					log.info(
+							"Finished gathering candidates from server (notif thread exiting)");
+					return;
 				}
 
-			}
-		};
-		notif.start();
+				JsonObject candidate = JsonUtils
+						.toJsonObject(candidateInfo.getIceCandidate());
+				log.debug("Sending candidate {}", candidate);
 
-		final CountDownLatch latch = new CountDownLatch(1);
-		Thread t = new Thread() {
-			public void run() {
-				initWebRtcSdpProcessor(new SdpOfferProcessor() {
-					@Override
-					public String processSdpOffer(String sdpOffer) {
-						String sdpAnswer = null;
-						try {
-							if (mode == WebRtcMode.SEND_ONLY) {
-								sdpAnswer = kurentoTree.setTreeSource(treeId, sdpOffer);
-							} else if (mode == WebRtcMode.RCV_ONLY) {
-								TreeEndpoint treeEndpoint = kurentoTree.addTreeSink(treeId, sdpOffer);
-								sdpAnswer = treeEndpoint.getSdp();
-								out[0] = treeEndpoint.getId();
-							}
+				TreeTestPage.super.addIceCandidate(candidate);
 
-						} catch (Exception e) {
-							log.error("Exception processing sdp offer", e);
-						}
-						return sdpAnswer;
-					}
-				}, channel, mode);
-				latch.countDown();
+			} catch (Exception e) {
+				log.warn(
+						"Exception while processing ICE candidate and sending notification",
+						e);
 			}
-		};
-		t.start();
-		if (!latch.await(browser.getTimeout(), TimeUnit.SECONDS)) {
-			t.interrupt();
-			t.stop();
 		}
+	}
 
-		return out[0];
+	public String internalTreeManagement(final KurentoTreeClient kurentoTree,
+			final String treeId, final WebRtcChannel channel,
+			final WebRtcMode mode) throws InterruptedException {
+
+		new Thread(() -> retrieveIceCandidates(kurentoTree)).start();
+
+		String[] id = new String[1];
+		CountDownLatch sinkIdReceived = new CountDownLatch(1);
+
+		WebRtcConfigurer webRtcConfigurer = new WebRtcConfigurer() {
+
+			@Override
+			public void addIceCandidate(IceCandidate candidate) {
+				try {
+					sinkIdReceived.await();
+					kurentoTree.addIceCandidate(treeId, id[0], candidate);
+				} catch (Exception e) {
+					log.error("Exception processing iceCandidate");
+				}
+			}
+
+			public String processOffer(String sdpOffer) {
+
+				String sdpAnswer = null;
+				try {
+
+					if (mode == WebRtcMode.SEND_ONLY) {
+						sdpAnswer = kurentoTree.setTreeSource(treeId, sdpOffer);
+
+					} else if (mode == WebRtcMode.RCV_ONLY) {
+						TreeEndpoint treeEndpoint = kurentoTree
+								.addTreeSink(treeId, sdpOffer);
+						sdpAnswer = treeEndpoint.getSdp();
+						id[0] = treeEndpoint.getId();
+					}
+
+				} catch (Exception e) {
+					log.error("Exception processing sdp offer", e);
+				}
+
+				sinkIdReceived.countDown();
+				return sdpAnswer;
+			}
+		};
+
+		log.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+
+		initWebRtc(webRtcConfigurer, channel, mode);
+
+		log.info("--------------------------------------");
+
+		sinkIdReceived.await();
+
+		log.info("######################################");
+
+		return id[0];
 	}
 
 }

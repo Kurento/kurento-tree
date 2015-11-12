@@ -1,6 +1,5 @@
 package org.kurento.tree.server.kmsmanager;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -13,7 +12,7 @@ public class RealElasticKmsManager extends KmsManager implements KmsRegistrar {
 
 	public List<Kms> kmss = new CopyOnWriteArrayList<>();
 
-	public RealElasticKmsManager(List<String> kmsWsUris) throws IOException {
+	public RealElasticKmsManager(List<String> kmsWsUris) {
 		for (String kmsWsUri : kmsWsUris) {
 			addKms(kmsWsUri);
 		}

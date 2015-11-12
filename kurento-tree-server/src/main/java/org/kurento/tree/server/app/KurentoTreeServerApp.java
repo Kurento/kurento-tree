@@ -3,20 +3,21 @@ package org.kurento.tree.server.app;
 import static org.kurento.commons.PropertiesManager.getProperty;
 import static org.kurento.commons.PropertiesManager.getPropertyJson;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 
 import org.kurento.commons.ConfigFileManager;
-import org.kurento.commons.exception.KurentoException;
+import org.kurento.jsonrpc.JsonRpcHandler;
 import org.kurento.jsonrpc.JsonUtils;
 import org.kurento.jsonrpc.internal.server.config.JsonRpcConfiguration;
 import org.kurento.jsonrpc.server.JsonRpcConfigurer;
 import org.kurento.jsonrpc.server.JsonRpcHandlerRegistry;
+import org.kurento.tree.client.TreeException;
 import org.kurento.tree.server.kmsmanager.KmsManager;
+import org.kurento.tree.server.kmsmanager.MinWebRtcEpsKmsManager;
 import org.kurento.tree.server.kmsmanager.RealElasticKmsManager;
 import org.kurento.tree.server.treemanager.LessLoadedElasticTM;
-import org.kurento.tree.server.treemanager.OneKmsTM;
+import org.kurento.tree.server.treemanager.LessLoadedOnlySource2TM;
 import org.kurento.tree.server.treemanager.TreeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 @Configuration
 @Import(JsonRpcConfiguration.class)
@@ -49,25 +51,37 @@ public class KurentoTreeServerApp implements JsonRpcConfigurer {
 	public static final String KMSS_URIS_PROPERTY = "kms.uris";
 	public static final String KMSS_URIS_DEFAULT = "[ \"ws://localhost:8888/kurento\" ]";
 
+	public static final String KMS_MODE_PROPERTY = "kms.mode";
+	public static final String KMS_MODE_DEFAULT = "registrar";
+
+	private KmsMode kmsMode = getProperty(KMS_MODE_PROPERTY, KmsMode.NUBOMEDIA);
+
+	private enum KmsMode {
+		REGISTRAR, NUBOMEDIA
+	}
+
 	private static ConfigurableApplicationContext app;
 
 	@Bean
 	public KmsManager kmsManager() {
 
-		try {
-
-			JsonArray kmsUris = getPropertyJson(KMSS_URIS_PROPERTY,
-					KMSS_URIS_DEFAULT, JsonArray.class);
-			List<String> kmsWsUris = JsonUtils.toStringList(kmsUris);
-
-			log.info("Configuring Kurento Tree Server to use kmss: "
-					+ kmsWsUris);
-
-			return new RealElasticKmsManager(kmsWsUris);
-
-		} catch (IOException e) {
-			throw new KurentoException(e);
+		switch (kmsMode) {
+		case REGISTRAR:
+			return new RealElasticKmsManager(loadKmsUris());
+		case NUBOMEDIA:
+			return new MinWebRtcEpsKmsManager();
+		default:
+			throw new TreeException("Unsupported kmsMode " + kmsMode);
 		}
+	}
+
+	private List<String> loadKmsUris() {
+		JsonArray kmsUris = getPropertyJson(KMSS_URIS_PROPERTY,
+				KMSS_URIS_DEFAULT, JsonArray.class);
+		List<String> kmsWsUris = JsonUtils.toStringList(kmsUris);
+
+		log.info("Configuring Kurento Tree Server to use kmss: " + kmsWsUris);
+		return kmsWsUris;
 	}
 
 	@Bean
@@ -75,21 +89,17 @@ public class KurentoTreeServerApp implements JsonRpcConfigurer {
 
 		KmsManager kmsManager = kmsManager();
 
-		if (kmsManager.getKmss().size() == 1) {
-			return new OneKmsTM(kmsManager);
-		} else {
+		switch (kmsMode) {
+		case REGISTRAR:
 			return new LessLoadedElasticTM(kmsManager);
-		}
-	}
+		case NUBOMEDIA:
+			LessLoadedOnlySource2TM treeManager = new LessLoadedOnlySource2TM(
+					kmsManager);
+			((MinWebRtcEpsKmsManager) kmsManager).setKmsListener(treeManager);
 
-	public KmsRegistrar registrar() {
-		KmsManager kmsManager = kmsManager();
-		if (kmsManager instanceof KmsRegistrar) {
-			return (KmsRegistrar) kmsManager;
-		} else {
-			log.warn(
-					"Kurento Tree server is using a DummyRegistrar. New KMSs will be ignored");
-			return new DummyRegistrar();
+			return treeManager;
+		default:
+			throw new TreeException("Unsupported kmsMode " + kmsMode);
 		}
 	}
 
@@ -97,16 +107,18 @@ public class KurentoTreeServerApp implements JsonRpcConfigurer {
 	public void registerJsonRpcHandlers(JsonRpcHandlerRegistry registry) {
 		registry.addHandler(clientsJsonRpcHandler().withSockJS(),
 				getProperty(WEBSOCKET_PATH_PROPERTY, WEBSOCKET_PATH_DEFAULT));
-		registry.addHandler(registrarJsonRpcHandler(), "/registrar");
+
+		if (kmsMode == KmsMode.REGISTRAR) {
+			JsonRpcHandler<JsonObject> registrar = new RegistrarJsonRpcHandler(
+					(KmsRegistrar) kmsManager());
+
+			registry.addHandler(registrar, "/registrar");
+		}
 	}
 
 	@Bean
 	public ClientsJsonRpcHandler clientsJsonRpcHandler() {
 		return new ClientsJsonRpcHandler(treeManager());
-	}
-
-	private RegistrarJsonRpcHandler registrarJsonRpcHandler() {
-		return new RegistrarJsonRpcHandler(registrar());
 	}
 
 	public static ConfigurableApplicationContext start() {
@@ -140,7 +152,9 @@ public class KurentoTreeServerApp implements JsonRpcConfigurer {
 	}
 
 	public static void stop() {
-		app.close();
+		if (app != null) {
+			app.close();
+		}
 	}
 
 	public static void main(String[] args) throws Exception {

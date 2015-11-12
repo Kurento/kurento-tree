@@ -117,14 +117,19 @@ public class LessLoadedOnlySource2TM extends AbstractNTreeTM
 				}
 
 				sourcePipeline = sourceKms.createPipeline();
+				sourcePipeline.setLabel(treeId);
+
 				ownPipelineByKms.put(sourceKms, sourcePipeline);
 			}
 
 			source = sourcePipeline.createWebRtc(
 					new TreeElementSession(session, treeId, null));
+			source.setLabel(treeId + "_source");
 
 			for (int i = 0; i < NUM_WEBRTC_FOR_TREE; i++) {
 				Plumber sourcePipelinePlumber = sourcePipeline.createPlumber();
+				sourcePipelinePlumber.setLabel(treeId + "_plumber" + i);
+
 				source.connect(sourcePipelinePlumber);
 				this.sourcePlumbers.add(sourcePipelinePlumber);
 			}
@@ -195,17 +200,20 @@ public class LessLoadedOnlySource2TM extends AbstractNTreeTM
 					}
 
 					pipeline = selectedKms.createPipeline();
+					pipeline.setLabel(treeId);
 
 					ownPipelineByKms.put(selectedKms, pipeline);
 
-					pipeline.setLabel(UUID.randomUUID().toString());
 					leafPipelines.add(pipeline);
 
 					Plumber sinkPipelinePlumber = pipeline.createPlumber();
+					sinkPipelinePlumber.setLabel(treeId + "_sinkPlumber");
 					freeSourcePlumber.link(sinkPipelinePlumber);
 
 					for (int i = 0; i < NUM_WEBRTC_FOR_TREE; i++) {
 						Plumber leafOutputPlumber = pipeline.createPlumber();
+						leafOutputPlumber.setLabel(treeId + "_plumber" + i);
+
 						sinkPipelinePlumber.connect(leafOutputPlumber);
 						this.leafPlumbers.add(sinkPipelinePlumber);
 					}
@@ -216,6 +224,8 @@ public class LessLoadedOnlySource2TM extends AbstractNTreeTM
 			String id = UUID.randomUUID().toString();
 			WebRtc webRtc = pipeline
 					.createWebRtc(new TreeElementSession(session, treeId, id));
+			webRtc.setLabel(
+					treeId + "_sink_" + id.substring(0, id.indexOf('-')));
 
 			if (pipeline != sourcePipeline) {
 				pipeline.getPlumbers().get(0).connect(webRtc);
@@ -227,7 +237,6 @@ public class LessLoadedOnlySource2TM extends AbstractNTreeTM
 			webRtc.gatherCandidates();
 
 			webRtcsById.put(id, webRtc);
-			webRtc.setLabel("Sink " + id.substring(0, id.indexOf('-')));
 
 			System.out.println("Holes: " + remainingHoles);
 
@@ -334,7 +343,13 @@ public class LessLoadedOnlySource2TM extends AbstractNTreeTM
 		@Override
 		public void addSinkIceCandidate(String sinkId,
 				IceCandidate iceCandidate) {
-			webRtcsById.get(sinkId).addIceCandidate(iceCandidate);
+			WebRtc webRtc = webRtcsById.get(sinkId);
+			if (webRtc != null) {
+				webRtc.addIceCandidate(iceCandidate);
+			} else {
+				log.warn("Reciving iceCandidate, but sink {} has no WebRtc",
+						sinkId);
+			}
 		}
 
 		@Override

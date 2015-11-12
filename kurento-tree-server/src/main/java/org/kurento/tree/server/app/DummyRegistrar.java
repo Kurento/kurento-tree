@@ -9,7 +9,9 @@ public class DummyRegistrar implements KmsRegistrar {
 
 	@Override
 	public void register(String wsUri) {
-		log.info("Registered new KMS with wsUri:" + wsUri);
+		log.info(
+				"Received Kms register request {} in DummyRegistrar. Ignoring it",
+				wsUri);
 	}
 
 }

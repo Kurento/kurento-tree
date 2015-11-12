@@ -22,41 +22,49 @@ public class RealWebRtc extends WebRtc implements RealElement {
 
 	public RealWebRtc(RealPipeline pipeline, final TreeElementSession session) {
 		super(pipeline);
-		
+
 		this.webRtcEndpoint = new WebRtcEndpoint.Builder(
 				pipeline.getMediaPipeline()).build();
-		
-		this.webRtcEndpoint
-		.addOnIceCandidateListener(new EventListener<OnIceCandidateEvent>() {
-			@Override
-			public void onEvent(OnIceCandidateEvent event) {
-				try {
-					JsonObject params = new JsonObject();
-					params.addProperty(ProtocolElements.TREE_ID,
-							session.getTreeId());
-					params.addProperty(ProtocolElements.SINK_ID,
-							session.getSinkId());
-					params.addProperty(
-							ProtocolElements.ICE_SDP_M_LINE_INDEX,
-							event.getCandidate().getSdpMLineIndex());
-					params.addProperty(ProtocolElements.ICE_SDP_MID,
-							event.getCandidate().getSdpMid());
-					params.addProperty(ProtocolElements.ICE_CANDIDATE,
-							event.getCandidate().getCandidate());
-					session.getSession().sendNotification(
-							ProtocolElements.ICE_CANDIDATE_EVENT,
-							params);
+
+		if (getLabel() != null) {
+			this.webRtcEndpoint.setName(getLabel());
+		}
+
+		this.webRtcEndpoint.addMediaStateChangedListener(
+				e -> log.info("WebRtcEndpoint {} state changed from {} to {}",
+						this.getLabel(), e.getOldState(), e.getNewState()));
+
+		this.webRtcEndpoint.addOnIceCandidateListener(
+				new EventListener<OnIceCandidateEvent>() {
+					@Override
+					public void onEvent(OnIceCandidateEvent event) {
+						try {
+							JsonObject params = new JsonObject();
+							params.addProperty(ProtocolElements.TREE_ID,
+									session.getTreeId());
+							params.addProperty(ProtocolElements.SINK_ID,
+									session.getSinkId());
+							params.addProperty(
+									ProtocolElements.ICE_SDP_M_LINE_INDEX,
+									event.getCandidate().getSdpMLineIndex());
+							params.addProperty(ProtocolElements.ICE_SDP_MID,
+									event.getCandidate().getSdpMid());
+							params.addProperty(ProtocolElements.ICE_CANDIDATE,
+									event.getCandidate().getCandidate());
+							session.getSession().sendNotification(
+									ProtocolElements.ICE_CANDIDATE_EVENT,
+									params);
 							log.debug(
 									"Sent ICE candidate notif for {}: {} - {}",
 									session, event.getCandidate().getSdpMid(),
 									event.getCandidate().getCandidate());
-				} catch (IOException e) {
-					log.warn(
-							"Exception while sending ice candidate for {}",
-							session, e);
-				}
-			}
-		});
+						} catch (IOException e) {
+							log.warn(
+									"Exception while sending ice candidate for {}",
+									session, e);
+						}
+					}
+				});
 	}
 
 	@Override
@@ -71,9 +79,6 @@ public class RealWebRtc extends WebRtc implements RealElement {
 
 	@Override
 	public void addIceCandidate(IceCandidate candidate) {
-		
-		log.info("########################## "+this.getId());
-		
 		webRtcEndpoint.addIceCandidate(candidate);
 	}
 
@@ -97,9 +102,15 @@ public class RealWebRtc extends WebRtc implements RealElement {
 		super.connect(element);
 		webRtcEndpoint.connect(((RealElement) element).getMediaElement());
 	}
-	
+
 	@Override
 	public String getId() {
 		return webRtcEndpoint.getId();
+	}
+
+	@Override
+	public void setLabel(String label) {
+		super.setLabel(label);
+		webRtcEndpoint.setName(label);
 	}
 }
