@@ -14,6 +14,8 @@
  */
 package org.kurento.test.base;
 
+import java.util.concurrent.CountDownLatch;
+
 import org.kurento.client.IceCandidate;
 import org.kurento.jsonrpc.JsonUtils;
 import org.kurento.test.browser.WebRtcChannel;
@@ -24,8 +26,6 @@ import org.kurento.tree.client.TreeEndpoint;
 import org.kurento.tree.client.internal.IceCandidateInfo;
 
 import com.google.gson.JsonObject;
-
-import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
 
 /**
  * Specific browser page for kurento-tree tests.

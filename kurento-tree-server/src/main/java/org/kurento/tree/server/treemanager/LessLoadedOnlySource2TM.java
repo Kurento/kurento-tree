@@ -145,9 +145,17 @@ public class LessLoadedOnlySource2TM extends AbstractNTreeTM
 
 		@Override
 		public void removeTreeSource() {
-			freeWebRtc(sourceKms, 1 + NUM_WEBRTC_FOR_TREE);
-			source.release();
-			source = null;
+			if (source != null) {
+
+				if (source.getSinks().size() > NUM_WEBRTC_FOR_TREE) {
+					throw new TreeException(
+							"Removing or changing TreeSource with sinks is not currently supported");
+				}
+
+				freeWebRtc(sourceKms, 1 + NUM_WEBRTC_FOR_TREE);
+				source.release();
+				source = null;
+			}
 		}
 
 		@Override

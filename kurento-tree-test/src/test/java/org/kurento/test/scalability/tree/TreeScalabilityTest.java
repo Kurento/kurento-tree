@@ -19,16 +19,16 @@ import static org.kurento.commons.PropertiesManager.getProperty;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
 import org.kurento.test.base.KurentoClientWebPageTest;
-import org.kurento.test.base.KurentoTreeTest;
+import org.kurento.test.base.KurentoTreeTestBase;
 import org.kurento.test.browser.Browser;
 import org.kurento.test.browser.BrowserType;
 import org.kurento.test.browser.WebPageType;
@@ -41,8 +41,6 @@ import org.kurento.test.latency.ChartWriter;
 import org.kurento.test.latency.LatencyController;
 import org.kurento.test.latency.LatencyRegistry;
 import org.kurento.tree.client.KurentoTreeClient;
-
-import edu.emory.mathcs.backport.java.util.Arrays;
 
 /**
  * <strong>Description</strong>: WebRTC one to one (plus N fake clients) with
@@ -60,14 +58,15 @@ import edu.emory.mathcs.backport.java.util.Arrays;
  * @author Boni Garcia (bgarcia@gsyc.es)
  * @since 6.1.1
  */
-public class TreeScalabilityTest extends KurentoTreeTest {
+public class TreeScalabilityTest extends KurentoTreeTestBase {
 
 	private static final int WIDTH = 500;
 	private static final int HEIGHT = 270;
 
-	private static int playTime = getProperty("test.scalability.latency.playtime", 30); // seconds
-	private static String[] fakeClientsArray = getProperty("test.scalability.latency.fakeclients", "0,50,100,150")
-			.split(",");
+	private static int playTime = getProperty(
+			"test.scalability.latency.playtime", 30); // seconds
+	private static String[] fakeClientsArray = getProperty(
+			"test.scalability.latency.fakeclients", "0,1,3,5").split(",");
 
 	private static Map<Long, LatencyRegistry> latencyResult = new HashMap<>();
 
@@ -80,12 +79,17 @@ public class TreeScalabilityTest extends KurentoTreeTest {
 
 	@Parameters(name = "{index}: {0}")
 	public static Collection<Object[]> data() {
-		String videoPath = KurentoClientWebPageTest.getPathTestFiles() + "/video/15sec/rgbHD.y4m";
+		String videoPath = KurentoClientWebPageTest.getPathTestFiles()
+				+ "/video/15sec/rgbHD.y4m";
 		TestScenario test = new TestScenario();
-		test.addBrowser(BrowserConfig.BROWSER + 0, new Browser.Builder().webPageType(WebPageType.WEBRTC)
-				.browserType(BrowserType.CHROME).scope(BrowserScope.LOCAL).video(videoPath).build());
-		test.addBrowser(BrowserConfig.BROWSER + 1, new Browser.Builder().webPageType(WebPageType.WEBRTC)
-				.browserType(BrowserType.CHROME).scope(BrowserScope.LOCAL).build());
+		test.addBrowser(BrowserConfig.BROWSER + 0,
+				new Browser.Builder().webPageType(WebPageType.WEBRTC)
+						.browserType(BrowserType.CHROME)
+						.scope(BrowserScope.LOCAL).video(videoPath).build());
+		test.addBrowser(BrowserConfig.BROWSER + 1,
+				new Browser.Builder().webPageType(WebPageType.WEBRTC)
+						.browserType(BrowserType.CHROME)
+						.scope(BrowserScope.LOCAL).build());
 
 		Collection<Object[]> out = new ArrayList<>();
 		for (String s : fakeClientsArray) {
@@ -95,33 +99,40 @@ public class TreeScalabilityTest extends KurentoTreeTest {
 		return out;
 	}
 
-	@Ignore
 	@Test
 	public void testTreeScalability() throws Exception {
 		KurentoTreeClient kurentoTreeClientSink = null;
 
+		String treeId = "myTree";
+
 		try {
+
 			// Creating tree
-			String treeId = "myTree";
 			kurentoTreeClient.createTree(treeId);
-			kurentoTreeClientSink = new KurentoTreeClient(System.getProperty(KTS_WS_URI_PROP, KTS_WS_URI_DEFAULT));
+			kurentoTreeClientSink = new KurentoTreeClient(
+					System.getProperty(KTS_WS_URI_PROP, KTS_WS_URI_DEFAULT));
 
 			// Starting tree source
-			getPage(0).setTreeSource(kurentoTreeClient, treeId, WebRtcChannel.AUDIO_AND_VIDEO, WebRtcMode.SEND_ONLY);
+			getPage(0).setTreeSource(kurentoTreeClient, treeId,
+					WebRtcChannel.AUDIO_AND_VIDEO, WebRtcMode.SEND_ONLY);
 
 			// Starting tree sink
 			getPage(1).subscribeEvents("playing");
-			String sinkId = getPage(1).addTreeSink(kurentoTreeClientSink, treeId, WebRtcChannel.AUDIO_AND_VIDEO,
-					WebRtcMode.RCV_ONLY);
+			String sinkId = getPage(1).addTreeSink(kurentoTreeClientSink,
+					treeId, WebRtcChannel.AUDIO_AND_VIDEO, WebRtcMode.RCV_ONLY);
 
 			// Fake clients
 			addFakeClients(fakeClients, kurentoTreeClient, treeId, sinkId);
 
 			// Latency assessment
-			final LatencyController cs = new LatencyController();
-			cs.checkRemoteLatency(playTime, TimeUnit.SECONDS, getPage(0), getPage(1));
-			cs.drawChart(getDefaultOutputFile("-fakeClients" + fakeClients + ".png"), WIDTH, HEIGHT);
-			cs.writeCsv(getDefaultOutputFile("-fakeClients" + fakeClients + ".csv"));
+			LatencyController cs = new LatencyController();
+			cs.checkRemoteLatency(playTime, TimeUnit.SECONDS, getPage(0),
+					getPage(1));
+			cs.drawChart(
+					getDefaultOutputFile("-fakeClients" + fakeClients + ".png"),
+					WIDTH, HEIGHT);
+			cs.writeCsv(getDefaultOutputFile(
+					"-fakeClients" + fakeClients + ".csv"));
 			cs.logLatencyErrorrs();
 
 			// Latency average
@@ -135,7 +146,8 @@ public class TreeScalabilityTest extends KurentoTreeTest {
 			if (latencyMapSize > 0) {
 				avgLatency /= latencyMap.size();
 			}
-			latencyResult.put((long) fakeClients, new LatencyRegistry(avgLatency));
+			latencyResult.put((long) fakeClients,
+					new LatencyRegistry(avgLatency));
 
 		} finally {
 			// Close tree client
@@ -143,18 +155,25 @@ public class TreeScalabilityTest extends KurentoTreeTest {
 				kurentoTreeClientSink.close();
 			}
 
+			kurentoTreeClient.releaseTree(treeId);
+
 			// Write csv
-			PrintWriter pw = new PrintWriter(new FileWriter(getDefaultOutputFile("-latency.csv")));
+			PrintWriter pw = new PrintWriter(
+					new FileWriter(getDefaultOutputFile("-latency.csv")));
 			for (long time : latencyResult.keySet()) {
 				pw.println(time + "," + latencyResult.get(time).getLatency());
 			}
 			pw.close();
 
 			// Draw chart
-			ChartWriter chartWriter = new ChartWriter(latencyResult, "Latency avg",
-					"Latency of fake clients: " + Arrays.toString(fakeClientsArray), "Number of client(s)",
-					"Latency (ms)");
-			chartWriter.drawChart(getDefaultOutputFile("-latency-evolution.png"), WIDTH, HEIGHT);
+			ChartWriter chartWriter = new ChartWriter(latencyResult,
+					"Latency avg",
+					"Latency of fake clients: "
+							+ Arrays.toString(fakeClientsArray),
+					"Number of client(s)", "Latency (ms)");
+			chartWriter.drawChart(
+					getDefaultOutputFile("-latency-evolution.png"), WIDTH,
+					HEIGHT);
 		}
 	}
 

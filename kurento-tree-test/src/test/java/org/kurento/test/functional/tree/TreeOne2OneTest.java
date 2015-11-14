@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
-import org.kurento.test.base.KurentoTreeTest;
+import org.kurento.test.base.KurentoTreeTestBase;
 import org.kurento.test.browser.WebRtcChannel;
 import org.kurento.test.browser.WebRtcMode;
 import org.kurento.test.config.TestScenario;
@@ -41,7 +41,7 @@ import org.kurento.tree.client.KurentoTreeClient;
  * @author Boni Garcia (bgarcia@gsyc.es)
  * @since 6.1.1
  */
-public class TreeOne2OneTest extends KurentoTreeTest {
+public class TreeOne2OneTest extends KurentoTreeTestBase {
 
 	private static final int PLAYTIME = 10; // seconds
 
