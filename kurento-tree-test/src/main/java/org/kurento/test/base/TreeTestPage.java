@@ -126,15 +126,9 @@ public class TreeTestPage extends WebRtcTestPage {
 			}
 		};
 
-		log.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-
 		initWebRtc(webRtcConfigurer, channel, mode);
 
-		log.info("--------------------------------------");
-
 		sinkIdReceived.await();
-
-		log.info("######################################");
 
 		return id[0];
 	}
