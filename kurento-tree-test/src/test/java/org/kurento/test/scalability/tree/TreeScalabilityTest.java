@@ -150,6 +150,7 @@ public class TreeScalabilityTest extends KurentoTreeTestBase {
 					new LatencyRegistry(avgLatency));
 
 		} finally {
+
 			// Close tree client
 			if (kurentoTreeClientSink != null) {
 				kurentoTreeClientSink.close();

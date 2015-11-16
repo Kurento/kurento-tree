@@ -58,9 +58,10 @@ public class TreeOne2OneTest extends KurentoTreeTestBase {
 	public void testTreeOne2One() throws Exception {
 		KurentoTreeClient kurentoTreeClientSink = null;
 
+		String treeId = "myTree";
+
 		try {
 			// Creating tree
-			String treeId = "myTree";
 			kurentoTreeClient.createTree(treeId);
 
 			kurentoTreeClientSink = new KurentoTreeClient(
@@ -88,9 +89,12 @@ public class TreeOne2OneTest extends KurentoTreeTestBase {
 					getPage(1).similarColor(CHROME_VIDEOTEST_COLOR));
 
 		} finally {
+
 			if (kurentoTreeClientSink != null) {
 				kurentoTreeClientSink.close();
 			}
+
+			kurentoTreeClient.releaseTree(treeId);
 		}
 	}
 
