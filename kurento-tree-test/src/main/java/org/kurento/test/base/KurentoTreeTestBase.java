@@ -36,6 +36,7 @@ import org.kurento.tree.client.KurentoTreeClient;
 import org.kurento.tree.client.TreeEndpoint;
 import org.kurento.tree.client.TreeException;
 import org.kurento.tree.server.app.KurentoTreeServerApp;
+import org.springframework.context.ConfigurableApplicationContext;
 
 /**
  * Base for kurento-tree tests.
@@ -48,17 +49,18 @@ public class KurentoTreeTestBase extends WebPageTest<TreeTestPage> {
 	public final static String KTS_WS_URI_PROP = "kts.ws.uri";
 	public final static String KTS_WS_URI_DEFAULT = "ws://localhost:8890/kurento-tree";
 
-	protected static KurentoTreeClient kurentoTreeClient;
-
 	static {
 		System.setProperty("test.port",
 				KurentoTreeServerApp.WEBSOCKET_PORT_DEFAULT);
 	}
 
-	private KurentoClient fakeKurentoClient;
+	protected static KurentoTreeClient kurentoTreeClient;
 	private static String mainKmsWsUri;
 	private static KurentoMediaServerManager kms;
 	private static KurentoMediaServerManager fakeKms;
+	private static KurentoClient fakeKurentoClient;
+
+	private static ConfigurableApplicationContext app;
 
 	public KurentoTreeTestBase(TestScenario testScenario) {
 		super(testScenario);
@@ -71,7 +73,8 @@ public class KurentoTreeTestBase extends WebPageTest<TreeTestPage> {
 				TestConfiguration.TEST_APP_AUTOSTART_PROPERTY,
 				TestConfiguration.TEST_APP_AUTOSTART_DEFAULT);
 
-		if (appAutostart.equals(TestConfiguration.AUTOSTART_TESTSUITE_VALUE)) {
+		if (appAutostart.equals(TestConfiguration.AUTOSTART_TESTSUITE_VALUE)
+				&& app == null) {
 
 			String kmsAutostart = getProperty(
 					TestConfiguration.KMS_AUTOSTART_PROP,
@@ -86,7 +89,7 @@ public class KurentoTreeTestBase extends WebPageTest<TreeTestPage> {
 				System.setProperty("kms.url", mainKmsWsUri);
 			}
 
-			KurentoTreeServerApp.start();
+			app = KurentoTreeServerApp.start();
 		}
 
 		kurentoTreeClient = new KurentoTreeClient(
@@ -96,27 +99,29 @@ public class KurentoTreeTestBase extends WebPageTest<TreeTestPage> {
 	@AfterClass
 	public static void teardownTreeClient() throws Exception {
 
-		String appAutostart = getProperty(
-				TestConfiguration.TEST_APP_AUTOSTART_PROPERTY,
-				TestConfiguration.TEST_APP_AUTOSTART_DEFAULT);
-
-		if (appAutostart.equals(TestConfiguration.AUTOSTART_TESTSUITE_VALUE)) {
-
-			KurentoTreeServerApp.stop();
-
-			String kmsAutostart = getProperty(
-					TestConfiguration.KMS_AUTOSTART_PROP,
-					TestConfiguration.KMS_AUTOSTART_DEFAULT);
-
-			if (!kmsAutostart.equals(TestConfiguration.AUTOSTART_FALSE_VALUE)) {
-				kms.destroy();
-			}
-		}
-
-		if (fakeKms != null) {
-			fakeKms.destroy();
-		}
-
+		// TEST_SUITE Tests not should close app every time
+		// String appAutostart = getProperty(
+		// TestConfiguration.TEST_APP_AUTOSTART_PROPERTY,
+		// TestConfiguration.TEST_APP_AUTOSTART_DEFAULT);
+		//
+		// if (appAutostart.equals(TestConfiguration.AUTOSTART_TESTSUITE_VALUE))
+		// {
+		//
+		// KurentoTreeServerApp.stop();
+		//
+		// String kmsAutostart = getProperty(
+		// TestConfiguration.KMS_AUTOSTART_PROP,
+		// TestConfiguration.KMS_AUTOSTART_DEFAULT);
+		//
+		// if (!kmsAutostart.equals(TestConfiguration.AUTOSTART_FALSE_VALUE)) {
+		// kms.destroy();
+		// }
+		// }
+		//
+		// if (fakeKms != null) {
+		// fakeKms.destroy();
+		// }
+		//
 		if (kurentoTreeClient != null) {
 			kurentoTreeClient.close();
 		}
