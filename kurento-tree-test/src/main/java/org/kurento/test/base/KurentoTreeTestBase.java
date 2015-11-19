@@ -15,9 +15,8 @@
 package org.kurento.test.base;
 
 import static org.kurento.commons.PropertiesManager.getProperty;
-import static org.kurento.test.TestConfiguration.FAKE_KMS_WS_URI_PROP;
+import static org.kurento.test.config.TestConfiguration.FAKE_KMS_WS_URI_PROP;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.junit.AfterClass;
@@ -27,8 +26,7 @@ import org.kurento.client.KurentoClient;
 import org.kurento.client.MediaPipeline;
 import org.kurento.client.OnIceCandidateEvent;
 import org.kurento.client.WebRtcEndpoint;
-import org.kurento.commons.exception.KurentoException;
-import org.kurento.test.TestConfiguration;
+import org.kurento.test.config.TestConfiguration;
 import org.kurento.test.config.TestScenario;
 import org.kurento.test.services.KurentoMediaServerManager;
 import org.kurento.test.services.KurentoServicesTestHelper;
@@ -44,7 +42,7 @@ import org.springframework.context.ConfigurableApplicationContext;
  * @author Boni Garcia (bgarcia@gsyc.es)
  * @since 6.1.1
  */
-public class KurentoTreeTestBase extends WebPageTest<TreeTestPage> {
+public class KurentoTreeTestBase extends BrowserTest<TreeTestPage> {
 
 	public final static String KTS_WS_URI_PROP = "kts.ws.uri";
 	public final static String KTS_WS_URI_DEFAULT = "ws://localhost:8890/kurento-tree";
@@ -158,25 +156,6 @@ public class KurentoTreeTestBase extends WebPageTest<TreeTestPage> {
 			mockReceiver.processAnswer(sdpAnswer);
 			mockReceiver.gatherCandidates();
 		}
-	}
-
-	protected String getDefaultOutputFile(String suffix) {
-
-		KurentoServicesTestHelper.setTestName(testName.getMethodName());
-		KurentoServicesTestHelper.setTestCaseName(this.getClass().getName());
-
-		File testResultsFolder = new File(KurentoServicesTestHelper.getTestDir()
-				+ "/" + KurentoServicesTestHelper.getTestCaseName());
-
-		if (!testResultsFolder.exists()) {
-			if (!testResultsFolder.mkdirs()) {
-				throw new KurentoException(
-						"Exception creating folders " + testResultsFolder);
-			}
-		}
-
-		String testName = KurentoServicesTestHelper.getSimpleTestName();
-		return testResultsFolder.getAbsolutePath() + "/" + testName + suffix;
 	}
 
 	protected synchronized KurentoClient fakeKurentoClient() {
