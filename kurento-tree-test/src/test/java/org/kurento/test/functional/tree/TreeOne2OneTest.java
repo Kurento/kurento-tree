@@ -45,10 +45,6 @@ public class TreeOne2OneTest extends KurentoTreeTestBase {
 
 	private static final int PLAYTIME = 10; // seconds
 
-	public TreeOne2OneTest(TestScenario testScenario) {
-		super(testScenario);
-	}
-
 	@Parameters(name = "{index}: {0}")
 	public static Collection<Object[]> data() {
 		return TestScenario.localChromes(2);

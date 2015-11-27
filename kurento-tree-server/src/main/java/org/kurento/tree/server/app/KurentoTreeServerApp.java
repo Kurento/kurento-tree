@@ -1,14 +1,12 @@
 package org.kurento.tree.server.app;
 
 import static org.kurento.commons.PropertiesManager.getProperty;
-import static org.kurento.commons.PropertiesManager.getPropertyJson;
 
-import java.util.List;
+import java.util.Arrays;
 import java.util.Properties;
 
 import org.kurento.commons.ConfigFileManager;
 import org.kurento.jsonrpc.JsonRpcHandler;
-import org.kurento.jsonrpc.JsonUtils;
 import org.kurento.jsonrpc.internal.server.config.JsonRpcConfiguration;
 import org.kurento.jsonrpc.server.JsonRpcConfigurer;
 import org.kurento.jsonrpc.server.JsonRpcHandlerRegistry;
@@ -28,7 +26,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 @Configuration
@@ -48,8 +45,8 @@ public class KurentoTreeServerApp implements JsonRpcConfigurer {
 	public static final String WEBSOCKET_PATH_PROPERTY = "ws.path";
 	public static final String WEBSOCKET_PATH_DEFAULT = "kurento-tree";
 
-	public static final String KMSS_URIS_PROPERTY = "kms.uris";
-	public static final String KMSS_URIS_DEFAULT = "[ \"ws://localhost:8888/kurento\" ]";
+	public static final String KMSS_URIS_PROPERTY = "kms.url";
+	public static final String KMSS_URIS_DEFAULT = "ws://localhost:8888/kurento";
 
 	public static final String KMS_MODE_PROPERTY = "kms.mode";
 	public static final String KMS_MODE_DEFAULT = "registrar";
@@ -67,7 +64,7 @@ public class KurentoTreeServerApp implements JsonRpcConfigurer {
 
 		switch (kmsMode) {
 		case REGISTRAR:
-			return new RealElasticKmsManager(loadKmsUris());
+			return new RealElasticKmsManager(Arrays.asList(loadKmsUrl()));
 		case NUBOMEDIA:
 			return new MinWebRtcEpsKmsManager();
 		default:
@@ -75,13 +72,12 @@ public class KurentoTreeServerApp implements JsonRpcConfigurer {
 		}
 	}
 
-	private List<String> loadKmsUris() {
-		JsonArray kmsUris = getPropertyJson(KMSS_URIS_PROPERTY,
-				KMSS_URIS_DEFAULT, JsonArray.class);
-		List<String> kmsWsUris = JsonUtils.toStringList(kmsUris);
+	private String loadKmsUrl() {
+		String kmsUrl = getProperty(KMSS_URIS_PROPERTY, KMSS_URIS_DEFAULT);
 
-		log.info("Configuring Kurento Tree Server to use kmss: " + kmsWsUris);
-		return kmsWsUris;
+		log.info("Configuring Kurento Tree Server to use kms: " + kmsUrl);
+
+		return kmsUrl;
 	}
 
 	@Bean

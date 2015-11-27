@@ -17,6 +17,7 @@ package org.kurento.test.scalability.tree;
 import static org.kurento.commons.PropertiesManager.getProperty;
 
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,8 +27,13 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
+import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
-import org.kurento.test.base.KurentoClientBrowserTest;
+import org.kurento.client.EventListener;
+import org.kurento.client.MediaPipeline;
+import org.kurento.client.OnIceCandidateEvent;
+import org.kurento.client.WebRtcEndpoint;
+import org.kurento.test.base.KurentoTest;
 import org.kurento.test.base.KurentoTreeTestBase;
 import org.kurento.test.browser.Browser;
 import org.kurento.test.browser.BrowserType;
@@ -41,6 +47,8 @@ import org.kurento.test.latency.ChartWriter;
 import org.kurento.test.latency.LatencyController;
 import org.kurento.test.latency.LatencyRegistry;
 import org.kurento.tree.client.KurentoTreeClient;
+import org.kurento.tree.client.TreeEndpoint;
+import org.kurento.tree.client.TreeException;
 
 /**
  * <strong>Description</strong>: WebRTC one to one (plus N fake clients) with
@@ -70,16 +78,12 @@ public class TreeScalabilityTest extends KurentoTreeTestBase {
 
 	private static Map<Long, LatencyRegistry> latencyResult = new HashMap<>();
 
-	private int fakeClients;
-
-	public TreeScalabilityTest(TestScenario testScenario, int fakeClients) {
-		super(testScenario);
-		this.fakeClients = fakeClients;
-	}
+	@Parameter(1)
+	public int fakeClients = 1;
 
 	@Parameters(name = "{index}: {0}")
 	public static Collection<Object[]> data() {
-		String videoPath = KurentoClientBrowserTest.getPathTestFiles()
+		String videoPath = KurentoTest.getTestFilesPath()
 				+ "/video/15sec/rgbHD.y4m";
 		TestScenario test = new TestScenario();
 		test.addBrowser(BrowserConfig.BROWSER + 0,
@@ -97,6 +101,39 @@ public class TreeScalabilityTest extends KurentoTreeTestBase {
 		}
 
 		return out;
+	}
+
+	public void addFakeClients(int numMockClients,
+			final KurentoTreeClient kurentoTree, final String treeId,
+			final String sinkId) throws TreeException, IOException {
+
+		MediaPipeline mockPipeline = fakeKurentoClient().createMediaPipeline();
+
+		for (int i = 0; i < numMockClients; i++) {
+			WebRtcEndpoint mockReceiver = new WebRtcEndpoint.Builder(
+					mockPipeline).build();
+
+			mockReceiver.addOnIceCandidateListener(
+					new EventListener<OnIceCandidateEvent>() {
+						@Override
+						public void onEvent(OnIceCandidateEvent event) {
+							try {
+								kurentoTree.addIceCandidate(treeId, sinkId,
+										event.getCandidate());
+
+							} catch (Exception e) {
+								log.error("Exception adding candidate", e);
+							}
+						}
+					});
+
+			String sdpOffer = mockReceiver.generateOffer();
+			TreeEndpoint treeEndpoint = kurentoTree.addTreeSink(treeId,
+					sdpOffer);
+			String sdpAnswer = treeEndpoint.getSdp();
+			mockReceiver.processAnswer(sdpAnswer);
+			mockReceiver.gatherCandidates();
+		}
 	}
 
 	@Test
