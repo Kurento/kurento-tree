@@ -29,7 +29,6 @@ import org.kurento.client.IceCandidate;
 import org.kurento.jsonrpc.DefaultJsonRpcHandler;
 import org.kurento.jsonrpc.Transaction;
 import org.kurento.jsonrpc.message.Request;
-import org.kurento.tree.client.internal.IceCandidateInfo;
 import org.kurento.tree.client.internal.JsonTreeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

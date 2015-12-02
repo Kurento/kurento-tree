@@ -22,7 +22,6 @@ import org.kurento.jsonrpc.JsonRpcErrorException;
 import org.kurento.jsonrpc.JsonUtils;
 import org.kurento.jsonrpc.client.JsonRpcClient;
 import org.kurento.jsonrpc.client.JsonRpcClientWebSocket;
-import org.kurento.tree.client.internal.IceCandidateInfo;
 import org.kurento.tree.client.internal.JsonTreeUtils;
 
 import com.google.gson.JsonElement;

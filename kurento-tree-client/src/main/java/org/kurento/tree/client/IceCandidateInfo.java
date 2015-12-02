@@ -13,7 +13,7 @@
  *
  */
 
-package org.kurento.tree.client.internal;
+package org.kurento.tree.client;
 
 import org.kurento.client.IceCandidate;
 

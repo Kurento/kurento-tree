@@ -21,9 +21,9 @@ import org.kurento.jsonrpc.JsonUtils;
 import org.kurento.test.browser.WebRtcChannel;
 import org.kurento.test.browser.WebRtcMode;
 import org.kurento.test.browser.WebRtcTestPage;
+import org.kurento.tree.client.IceCandidateInfo;
 import org.kurento.tree.client.KurentoTreeClient;
 import org.kurento.tree.client.TreeEndpoint;
-import org.kurento.tree.client.internal.IceCandidateInfo;
 
 import com.google.gson.JsonObject;
 

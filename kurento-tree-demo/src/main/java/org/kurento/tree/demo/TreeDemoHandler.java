@@ -18,10 +18,10 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.kurento.client.IceCandidate;
+import org.kurento.tree.client.IceCandidateInfo;
 import org.kurento.tree.client.KurentoTreeClient;
 import org.kurento.tree.client.TreeEndpoint;
 import org.kurento.tree.client.TreeException;
-import org.kurento.tree.client.internal.IceCandidateInfo;
 import org.kurento.tree.client.internal.ProtocolElements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
