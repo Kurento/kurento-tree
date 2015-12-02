@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.kurento</groupId>
 		<artifactId>kurento-tree</artifactId>
-		<version>6.1.1-SNAPSHOT</version>
+		<version>6.2.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>kurento-tree-server</artifactId>
 	<packaging>jar</packaging>
@@ -44,6 +44,10 @@
 			<organizationUrl>http://www.kurento.org</organizationUrl>
 		</developer>
 	</developers>
+	
+	<properties>		
+		<start-class>org.kurento.tree.server.app.KurentoTreeServerApp</start-class>
+	</properties>
 
 	<build>
 		<plugins>
@@ -51,7 +55,7 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
-					<mainClass>org.kurento.tree.server.app.KurentoTreeServerApp</mainClass>
+					<mainClass>${start-class}</mainClass>
 					<layout>ZIP</layout>
 				</configuration>
 				<executions>
@@ -97,9 +101,14 @@
 					</execution>
 				</executions>
 			</plugin>
-
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<configuration>					
+					<mainClass>${start-class}</mainClass>
+				</configuration>
+			</plugin>
 		</plugins>
-
 	</build>
 
 	<dependencies>
@@ -114,6 +123,7 @@
 		<dependency>
 			<groupId>org.kurento.module</groupId>
 			<artifactId>plumberendpoint</artifactId>
+			<version>6.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.kurento</groupId>
