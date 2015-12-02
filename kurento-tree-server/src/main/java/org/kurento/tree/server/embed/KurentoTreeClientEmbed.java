@@ -24,7 +24,7 @@ public class KurentoTreeClientEmbed {
 			public void close() throws IOException {
 				super.close();
 				server.close();
-			}			
+			}
 		};
 	}
 	

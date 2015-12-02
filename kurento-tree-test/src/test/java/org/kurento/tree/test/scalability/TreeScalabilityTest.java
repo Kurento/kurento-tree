@@ -12,7 +12,7 @@
  * Lesser General Public License for more details.
  *
  */
-package org.kurento.test.scalability.tree;
+package org.kurento.tree.test.scalability;
 
 import static org.kurento.commons.PropertiesManager.getProperty;
 

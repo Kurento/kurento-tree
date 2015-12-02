@@ -12,7 +12,7 @@
  * Lesser General Public License for more details.
  *
  */
-package org.kurento.test.functional.tree;
+package org.kurento.tree.test.functional;
 
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;

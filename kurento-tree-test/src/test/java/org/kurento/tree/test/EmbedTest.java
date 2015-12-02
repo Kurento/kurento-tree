@@ -1,12 +1,18 @@
-package org.kurento.tree.server.test;
+package org.kurento.tree.test;
 
 import java.io.IOException;
 
 import org.junit.Test;
+import org.kurento.test.base.KurentoTest;
+import org.kurento.test.services.KmsService;
+import org.kurento.test.services.Service;
 import org.kurento.tree.client.KurentoTreeClient;
 import org.kurento.tree.server.embed.KurentoTreeClientEmbed;
 
-public class EmbedTest {
+public class EmbedTest extends KurentoTest {
+	
+	@Service
+	private KmsService kms = new KmsService();
 
 	@Test
 	public void test() throws IOException {
@@ -16,5 +22,5 @@ public class EmbedTest {
 		client.createTree("XXXXX");
 		
 		client.close();
-	}	
+	}
 }
