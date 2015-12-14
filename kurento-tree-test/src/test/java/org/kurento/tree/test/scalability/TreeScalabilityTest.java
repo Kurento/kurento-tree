@@ -163,7 +163,7 @@ public class TreeScalabilityTest extends KurentoTreeTestBase {
 
 			// Latency assessment
 			LatencyController cs = new LatencyController();
-			cs.checkRemoteLatency(playTime, TimeUnit.SECONDS, getPage(0),
+			cs.checkLatency(playTime, TimeUnit.SECONDS, getPage(0),
 					getPage(1));
 			cs.drawChart(
 					getDefaultOutputFile("-fakeClients" + fakeClients + ".png"),
