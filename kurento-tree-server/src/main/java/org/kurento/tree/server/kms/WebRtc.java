@@ -4,18 +4,18 @@ import org.kurento.client.IceCandidate;
 
 public class WebRtc extends Element {
 
-	protected WebRtc(Pipeline pipeline) {
-		super(pipeline);
-	}
+  protected WebRtc(Pipeline pipeline) {
+    super(pipeline);
+  }
 
-	public String processSdpOffer(String sdpOffer) {
-		return "fakeSdpResponse";
-	}
+  public String processSdpOffer(String sdpOffer) {
+    return "fakeSdpResponse";
+  }
 
-	public void gatherCandidates() {
-	}
+  public void gatherCandidates() {
+  }
 
-	public void addIceCandidate(IceCandidate candidate) {
-	}
-	
+  public void addIceCandidate(IceCandidate candidate) {
+  }
+
 }

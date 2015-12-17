@@ -29,10 +29,9 @@ import org.slf4j.LoggerFactory;
  * This TreeManager has the following characteristics:
  * <ul>
  * <li>It allows N trees</li>
- * <li>Creates WebRtcEndpoint for sinks (viewers) in any node (including KMSs
- * with sources)</li>
- * <li>Create source webrtc in less loaded node, but webrtc for sinks in the
- * same kms than source while space available</li>
+ * <li>Creates WebRtcEndpoint for sinks (viewers) in any node (including KMSs with sources)</li>
+ * <li>Create source webrtc in less loaded node, but webrtc for sinks in the same kms than source
+ * while space available</li>
  * <li>It considers new KMSs after start.</li>
  * </ul>
  *
@@ -40,268 +39,257 @@ import org.slf4j.LoggerFactory;
  */
 public class LessLoadedOnlySourceTM extends AbstractNTreeTM {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(LessLoadedOnlySourceTM.class);
-
-	public class LessLoadedTreeInfo extends TreeInfo {
+  private static final Logger log = LoggerFactory.getLogger(LessLoadedOnlySourceTM.class);
 
-		// Number of webrtcs reserved in each KMS when the source is connected
-		// to it. This allows create new pipelines in another machines to be
-		// connected to source pipeline.
-		private static final int NUM_WEBRTC_FOR_TREE = 1;
+  public class LessLoadedTreeInfo extends TreeInfo {
 
-		private String treeId;
+    // Number of webrtcs reserved in each KMS when the source is connected
+    // to it. This allows create new pipelines in another machines to be
+    // connected to source pipeline.
+    private static final int NUM_WEBRTC_FOR_TREE = 1;
 
-		private Kms sourceKms;
+    private String treeId;
 
-		private Pipeline sourcePipeline;
-		private WebRtc source;
-		private List<Plumber> sourcePlumbers = new ArrayList<>();
+    private Kms sourceKms;
 
-		private List<Pipeline> leafPipelines = new ArrayList<>();
-		private List<Plumber> leafPlumbers = new ArrayList<>();
-		private Map<String, WebRtc> sinks = new ConcurrentHashMap<>();
+    private Pipeline sourcePipeline;
+    private WebRtc source;
+    private List<Plumber> sourcePlumbers = new ArrayList<>();
 
-		private Map<Kms, Pipeline> ownPipelineByKms = new ConcurrentHashMap<>();
-		private Map<String, WebRtc> webRtcsById = new ConcurrentHashMap<>();
+    private List<Pipeline> leafPipelines = new ArrayList<>();
+    private List<Plumber> leafPlumbers = new ArrayList<>();
+    private Map<String, WebRtc> sinks = new ConcurrentHashMap<>();
 
-		public LessLoadedTreeInfo(String treeId) {
+    private Map<Kms, Pipeline> ownPipelineByKms = new ConcurrentHashMap<>();
+    private Map<String, WebRtc> webRtcsById = new ConcurrentHashMap<>();
 
-			this.treeId = treeId;
+    public LessLoadedTreeInfo(String treeId) {
 
-			if (kmsManager.getKmss().isEmpty()) {
-				throw new KurentoException(
-						"LessLoadedNElasticTM cannot be used without initial kmss");
-			}
-		}
+      this.treeId = treeId;
 
-		@Override
-		public void release() {
+      if (kmsManager.getKmss().isEmpty()) {
+        throw new KurentoException("LessLoadedNElasticTM cannot be used without initial kmss");
+      }
+    }
 
-			remainingHoles.get(sourceKms).addAndGet(1 + NUM_WEBRTC_FOR_TREE);
+    @Override
+    public void release() {
 
-			for (Plumber p : sourcePlumbers) {
-				if (p.getLinkedTo() != null) {
-					throw new TreeException(
-							"Exception removing TreeSource. Some plumbers are connected");
-				} else {
-					p.release();
-				}
-			}
+      remainingHoles.get(sourceKms).addAndGet(1 + NUM_WEBRTC_FOR_TREE);
 
-			source.release();
-			for (WebRtc webRtc : sinks.values()) {
-				webRtc.release();
-			}
-		}
+      for (Plumber p : sourcePlumbers) {
+        if (p.getLinkedTo() != null) {
+          throw new TreeException("Exception removing TreeSource. Some plumbers are connected");
+        } else {
+          p.release();
+        }
+      }
 
-		@Override
-		public synchronized String setTreeSource(Session session,
-				String offerSdp) {
+      source.release();
+      for (WebRtc webRtc : sinks.values()) {
+        webRtc.release();
+      }
+    }
 
-			if (source != null) {
-				removeTreeSource();
-			}
+    @Override
+    public synchronized String setTreeSource(Session session, String offerSdp) {
 
-			if (sourcePipeline == null) {
+      if (source != null) {
+        removeTreeSource();
+      }
 
-				for (KmsLoad kmsLoad : kmsManager.getKmssSortedByLoad()) {
-					sourceKms = kmsLoad.getKms();
-					AtomicInteger numHoles = remainingHoles.computeIfAbsent(
-							sourceKms,
-							kms -> new AtomicInteger(maxWebRtcsPerKMS));
-					if (numHoles.addAndGet(-1 - NUM_WEBRTC_FOR_TREE) >= 0) {
-						break;
-					} else {
-						numHoles.addAndGet(+1 + NUM_WEBRTC_FOR_TREE);
-					}
-				}
+      if (sourcePipeline == null) {
 
-				sourcePipeline = sourceKms.createPipeline();
-				ownPipelineByKms.put(sourceKms, sourcePipeline);
-			}
+        for (KmsLoad kmsLoad : kmsManager.getKmssSortedByLoad()) {
+          sourceKms = kmsLoad.getKms();
+          AtomicInteger numHoles = remainingHoles.computeIfAbsent(sourceKms,
+              kms -> new AtomicInteger(maxWebRtcsPerKMS));
+          if (numHoles.addAndGet(-1 - NUM_WEBRTC_FOR_TREE) >= 0) {
+            break;
+          } else {
+            numHoles.addAndGet(+1 + NUM_WEBRTC_FOR_TREE);
+          }
+        }
 
-			source = sourcePipeline.createWebRtc(
-					new TreeElementSession(session, treeId, null));
+        sourcePipeline = sourceKms.createPipeline();
+        ownPipelineByKms.put(sourceKms, sourcePipeline);
+      }
 
-			for (int i = 0; i < NUM_WEBRTC_FOR_TREE; i++) {
-				Plumber sourcePipelinePlumber = sourcePipeline.createPlumber();
-				source.connect(sourcePipelinePlumber);
-				this.sourcePlumbers.add(sourcePipelinePlumber);
-			}
+      source = sourcePipeline.createWebRtc(new TreeElementSession(session, treeId, null));
 
-			String sdpAnswer = source.processSdpOffer(offerSdp);
+      for (int i = 0; i < NUM_WEBRTC_FOR_TREE; i++) {
+        Plumber sourcePipelinePlumber = sourcePipeline.createPlumber();
+        source.connect(sourcePipelinePlumber);
+        this.sourcePlumbers.add(sourcePipelinePlumber);
+      }
 
-			source.gatherCandidates();
+      String sdpAnswer = source.processSdpOffer(offerSdp);
 
-			return sdpAnswer;
-		}
+      source.gatherCandidates();
 
-		@Override
-		public void removeTreeSource() {
-			source.release();
-			source = null;
-		}
+      return sdpAnswer;
+    }
 
-		@Override
-		public TreeEndpoint addTreeSink(Session session, String sdpOffer) {
+    @Override
+    public void removeTreeSource() {
+      source.release();
+      source = null;
+    }
 
-			Kms selectedKms = null;
-			Pipeline pipeline = null;
+    @Override
+    public TreeEndpoint addTreeSink(Session session, String sdpOffer) {
 
-			if (remainingHoles.get(sourceKms).addAndGet(-1) >= 0) {
-				selectedKms = sourceKms;
-				pipeline = sourcePipeline;
+      Kms selectedKms = null;
+      Pipeline pipeline = null;
 
-			} else {
+      if (remainingHoles.get(sourceKms).addAndGet(-1) >= 0) {
+        selectedKms = sourceKms;
+        pipeline = sourcePipeline;
 
-				remainingHoles.get(sourceKms).addAndGet(1);
+      } else {
 
-				Plumber freeSourcePlumber = null;
-				for (Plumber p : this.sourcePlumbers) {
-					if (p.getLinkedTo() == null) {
-						freeSourcePlumber = p;
-						break;
-					}
-				}
+        remainingHoles.get(sourceKms).addAndGet(1);
 
-				selectedKms = selectKmsForSink();
+        Plumber freeSourcePlumber = null;
+        for (Plumber p : this.sourcePlumbers) {
+          if (p.getLinkedTo() == null) {
+            freeSourcePlumber = p;
+            break;
+          }
+        }
 
-				pipeline = ownPipelineByKms.get(selectedKms);
+        selectedKms = selectKmsForSink();
 
-				if (pipeline == null) {
+        pipeline = ownPipelineByKms.get(selectedKms);
 
-					if (freeSourcePlumber == null) {
-						throw new TreeException(
-								"Source KMS doesn't allow new webRtc and "
-										+ "hasn't free plumbers to connect to another KMS");
-					}
+        if (pipeline == null) {
 
-					pipeline = selectedKms.createPipeline();
+          if (freeSourcePlumber == null) {
+            throw new TreeException("Source KMS doesn't allow new webRtc and "
+                + "hasn't free plumbers to connect to another KMS");
+          }
 
-					ownPipelineByKms.put(selectedKms, pipeline);
+          pipeline = selectedKms.createPipeline();
 
-					pipeline.setLabel(UUID.randomUUID().toString());
-					leafPipelines.add(pipeline);
+          ownPipelineByKms.put(selectedKms, pipeline);
 
-					Plumber sinkPipelinePlumber = pipeline.createPlumber();
+          pipeline.setLabel(UUID.randomUUID().toString());
+          leafPipelines.add(pipeline);
 
-					freeSourcePlumber.link(sinkPipelinePlumber);
-					this.leafPlumbers.add(sinkPipelinePlumber);
-				}
-			}
+          Plumber sinkPipelinePlumber = pipeline.createPlumber();
 
-			String id = UUID.randomUUID().toString();
-			WebRtc webRtc = pipeline
-					.createWebRtc(new TreeElementSession(session, treeId, id));
+          freeSourcePlumber.link(sinkPipelinePlumber);
+          this.leafPlumbers.add(sinkPipelinePlumber);
+        }
+      }
 
-			if (pipeline != sourcePipeline) {
-				pipeline.getPlumbers().get(0).connect(webRtc);
-			} else {
-				source.connect(webRtc);
-			}
+      String id = UUID.randomUUID().toString();
+      WebRtc webRtc = pipeline.createWebRtc(new TreeElementSession(session, treeId, id));
 
-			String sdpAnswer = webRtc.processSdpOffer(sdpOffer);
-			webRtc.gatherCandidates();
+      if (pipeline != sourcePipeline) {
+        pipeline.getPlumbers().get(0).connect(webRtc);
+      } else {
+        source.connect(webRtc);
+      }
 
-			webRtcsById.put(id, webRtc);
-			webRtc.setLabel("Sink " + id + ")");
-			return new TreeEndpoint(sdpAnswer, id);
-		}
+      String sdpAnswer = webRtc.processSdpOffer(sdpOffer);
+      webRtc.gatherCandidates();
 
-		private Kms selectKmsForSink() {
+      webRtcsById.put(id, webRtc);
+      webRtc.setLabel("Sink " + id + ")");
+      return new TreeEndpoint(sdpAnswer, id);
+    }
 
-			Kms selectedKms = null;
+    private Kms selectKmsForSink() {
 
-			for (KmsLoad kmsLoad : kmsManager.getKmssSortedByLoad()) {
+      Kms selectedKms = null;
 
-				Kms kms = kmsLoad.getKms();
+      for (KmsLoad kmsLoad : kmsManager.getKmssSortedByLoad()) {
 
-				AtomicInteger numHoles = remainingHoles.computeIfAbsent(kms,
-						k -> new AtomicInteger(maxWebRtcsPerKMS));
+        Kms kms = kmsLoad.getKms();
 
-				// If there is a pipeline for this tree in this KMS then
-				// load is 1, else 1+RESERVED
-				int load = 1 + (ownPipelineByKms.get(kms) != null ? 0
-						: NUM_WEBRTC_FOR_TREE);
+        AtomicInteger numHoles = remainingHoles.computeIfAbsent(kms,
+            k -> new AtomicInteger(maxWebRtcsPerKMS));
 
-				if (numHoles.addAndGet(-load) >= 0) {
-					selectedKms = kmsLoad.getKms();
-				} else {
-					numHoles.addAndGet(load);
-				}
-			}
+        // If there is a pipeline for this tree in this KMS then
+        // load is 1, else 1+RESERVED
+        int load = 1 + (ownPipelineByKms.get(kms) != null ? 0 : NUM_WEBRTC_FOR_TREE);
 
-			if (selectedKms == null) {
-				log.warn("remainingHoles: " + remainingHoles);
-				throw new TreeException("No kms allows more WebRtcEndpoints");
-			}
-			return selectedKms;
-		}
+        if (numHoles.addAndGet(-load) >= 0) {
+          selectedKms = kmsLoad.getKms();
+        } else {
+          numHoles.addAndGet(load);
+        }
+      }
 
-		@Override
-		public void removeTreeSink(String sinkId) {
-			WebRtc webRtc = webRtcsById.get(sinkId);
+      if (selectedKms == null) {
+        log.warn("remainingHoles: " + remainingHoles);
+        throw new TreeException("No kms allows more WebRtcEndpoints");
+      }
+      return selectedKms;
+    }
 
-			Element elem = webRtc.getSource();
+    @Override
+    public void removeTreeSink(String sinkId) {
+      WebRtc webRtc = webRtcsById.get(sinkId);
 
-			remainingHoles.get(webRtc.getPipeline().getKms()).addAndGet(1);
+      Element elem = webRtc.getSource();
 
-			webRtc.release();
+      remainingHoles.get(webRtc.getPipeline().getKms()).addAndGet(1);
 
-			if (elem instanceof Plumber) {
+      webRtc.release();
 
-				Plumber plumber = (Plumber) elem;
+      if (elem instanceof Plumber) {
 
-				if (plumber.getSinks().isEmpty()) {
-					// Plumber remotePlumber = plumber.getLinkedTo();
-					Pipeline pipeline = plumber.getPipeline();
-					ownPipelineByKms.remove(pipeline.getKms());
+        Plumber plumber = (Plumber) elem;
 
-					remainingHoles.get(pipeline.getKms())
-							.addAndGet(NUM_WEBRTC_FOR_TREE);
+        if (plumber.getSinks().isEmpty()) {
+          // Plumber remotePlumber = plumber.getLinkedTo();
+          Pipeline pipeline = plumber.getPipeline();
+          ownPipelineByKms.remove(pipeline.getKms());
 
-					pipeline.release();
+          remainingHoles.get(pipeline.getKms()).addAndGet(NUM_WEBRTC_FOR_TREE);
 
-					// remotePlumber.release();
-				}
-			}
-		}
+          pipeline.release();
 
-		@Override
-		public void addSinkIceCandidate(String sinkId,
-				IceCandidate iceCandidate) {
-			webRtcsById.get(sinkId).addIceCandidate(iceCandidate);
-		}
+          // remotePlumber.release();
+        }
+      }
+    }
 
-		@Override
-		public void addTreeIceCandidate(IceCandidate iceCandidate) {
-			source.addIceCandidate(iceCandidate);
-		}
-	}
+    @Override
+    public void addSinkIceCandidate(String sinkId, IceCandidate iceCandidate) {
+      webRtcsById.get(sinkId).addIceCandidate(iceCandidate);
+    }
 
-	private KmsManager kmsManager;
-	private int maxWebRtcsPerKMS;
-	private ConcurrentMap<Kms, AtomicInteger> remainingHoles = new ConcurrentHashMap<>();
+    @Override
+    public void addTreeIceCandidate(IceCandidate iceCandidate) {
+      source.addIceCandidate(iceCandidate);
+    }
+  }
 
-	public LessLoadedOnlySourceTM(KmsManager kmsManager, int maxWebRtcsPerKMS) {
-		this.kmsManager = kmsManager;
-		this.maxWebRtcsPerKMS = maxWebRtcsPerKMS;
-	}
+  private KmsManager kmsManager;
+  private int maxWebRtcsPerKMS;
+  private ConcurrentMap<Kms, AtomicInteger> remainingHoles = new ConcurrentHashMap<>();
 
-	public LessLoadedOnlySourceTM(KmsManager kmsManager) {
-		this.kmsManager = kmsManager;
-		this.maxWebRtcsPerKMS = ReserveKmsManager.KMS_MAX_WEBRTC;
-	}
+  public LessLoadedOnlySourceTM(KmsManager kmsManager, int maxWebRtcsPerKMS) {
+    this.kmsManager = kmsManager;
+    this.maxWebRtcsPerKMS = maxWebRtcsPerKMS;
+  }
 
-	@Override
-	public KmsManager getKmsManager() {
-		return kmsManager;
-	}
+  public LessLoadedOnlySourceTM(KmsManager kmsManager) {
+    this.kmsManager = kmsManager;
+    this.maxWebRtcsPerKMS = ReserveKmsManager.KMS_MAX_WEBRTC;
+  }
 
-	@Override
-	protected TreeInfo createTreeInfo(String treeId) {
-		return new LessLoadedTreeInfo(treeId);
-	}
+  @Override
+  public KmsManager getKmsManager() {
+    return kmsManager;
+  }
+
+  @Override
+  protected TreeInfo createTreeInfo(String treeId) {
+    return new LessLoadedTreeInfo(treeId);
+  }
 
 }

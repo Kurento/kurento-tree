@@ -8,50 +8,50 @@ import org.kurento.tree.server.kms.loadmanager.MaxWebRtcLoadManager;
 
 public class Kms extends KurentoObj {
 
-	protected List<Pipeline> pipelines = new ArrayList<>();
-	private LoadManager loadManager = new MaxWebRtcLoadManager(10000);
+  protected List<Pipeline> pipelines = new ArrayList<>();
+  private LoadManager loadManager = new MaxWebRtcLoadManager(10000);
 
-	public Kms() {
+  public Kms() {
 
-	}
+  }
 
-	public Kms(String label) {
-		super(label);
-	}
+  public Kms(String label) {
+    super(label);
+  }
 
-	public Pipeline createPipeline() {
-		Pipeline pipeline = newPipeline();
-		pipelines.add(pipeline);
-		return pipeline;
-	}
+  public Pipeline createPipeline() {
+    Pipeline pipeline = newPipeline();
+    pipelines.add(pipeline);
+    return pipeline;
+  }
 
-	public List<Pipeline> getPipelines() {
-		return pipelines;
-	}
+  public List<Pipeline> getPipelines() {
+    return pipelines;
+  }
 
-	public void setLoadManager(LoadManager loadManager) {
-		this.loadManager = loadManager;
-	}
+  public void setLoadManager(LoadManager loadManager) {
+    this.loadManager = loadManager;
+  }
 
-	protected Pipeline newPipeline() {
-		return new Pipeline(this);
-	}
+  protected Pipeline newPipeline() {
+    return new Pipeline(this);
+  }
 
-	public double getLoad() {
-		return loadManager.calculateLoad(this);
-	}
+  public double getLoad() {
+    return loadManager.calculateLoad(this);
+  }
 
-	public boolean allowMoreElements() {
-		return loadManager.allowMoreElements(this);
-	}
+  public boolean allowMoreElements() {
+    return loadManager.allowMoreElements(this);
+  }
 
-	void removePipeline(Pipeline pipeline) {
-		this.pipelines.remove(pipeline);
-	}
+  void removePipeline(Pipeline pipeline) {
+    this.pipelines.remove(pipeline);
+  }
 
-	@Override
-	public String toString() {
-		return getLabel();
-	}
+  @Override
+  public String toString() {
+    return getLabel();
+  }
 
 }

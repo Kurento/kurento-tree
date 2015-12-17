@@ -59,8 +59,8 @@
 					<imageName>micaelgallego/${project.artifactId}</imageName>
 					<baseImage>java:8-jre</baseImage>
 					<cmd>["java", "-jar", "/${project.build.finalName}.jar"]</cmd>
-					<!-- copy the service's jar file from target into the root directory of 
-						the image -->
+					<!-- copy the service's jar file from target into the root directory 
+						of the image -->
 					<resources>
 						<resource>
 							<targetPath>/</targetPath>
@@ -69,8 +69,8 @@
 						</resource>
 					</resources>
 				</configuration>
-			</plugin>	
-		
+			</plugin>
+
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -85,7 +85,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			
+
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
@@ -124,7 +124,7 @@
 						</fileset>
 					</filesets>
 				</configuration>
-			</plugin>				
+			</plugin>
 		</plugins>
 
 		<resources>

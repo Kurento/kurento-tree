@@ -10,30 +10,29 @@ import org.kurento.tree.server.treemanager.TreeManager;
 
 public class Experiment9 extends Experiment {
 
-	public void configureExperiment() {
+  public void configureExperiment() {
 
-		System.setProperty("kms.maxWebrtc", "8");
-		System.setProperty("kms.real", "false");
-		System.setProperty("kms.avgLoadToNewKms", "0.9");
+    System.setProperty("kms.maxWebrtc", "8");
+    System.setProperty("kms.real", "false");
+    System.setProperty("kms.avgLoadToNewKms", "0.9");
 
-		ReserveKmsManager reserveKmsManager = new ReserveKmsManager();
+    ReserveKmsManager reserveKmsManager = new ReserveKmsManager();
 
-		setKmsManager(reserveKmsManager);
+    setKmsManager(reserveKmsManager);
 
-		addUsageSimulation(new CyclicAddRemoveSinksUsage(4, 10, 2, -1, 3));
+    addUsageSimulation(new CyclicAddRemoveSinksUsage(4, 10, 2, -1, 3));
 
-		addTreeManagerCreator(new TreeManagerCreator() {
-			@Override
-			public TreeManager createTreeManager(KmsManager kmsManager) {
-				LessLoadedOnlySource2TM treeManager = new LessLoadedOnlySource2TM(
-						kmsManager);
-				reserveKmsManager.setKmsListener(treeManager);
-				return treeManager;
-			}
-		});
-	}
+    addTreeManagerCreator(new TreeManagerCreator() {
+      @Override
+      public TreeManager createTreeManager(KmsManager kmsManager) {
+        LessLoadedOnlySource2TM treeManager = new LessLoadedOnlySource2TM(kmsManager);
+        reserveKmsManager.setKmsListener(treeManager);
+        return treeManager;
+      }
+    });
+  }
 
-	public static void main(String[] args) {
-		new Experiment9().run();
-	}
+  public static void main(String[] args) {
+    new Experiment9().run();
+  }
 }

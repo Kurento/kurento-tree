@@ -11,21 +11,21 @@ import org.kurento.tree.server.treemanager.TreeManager;
 
 public class Experiment0 extends Experiment {
 
-	public void configureExperiment() {
+  public void configureExperiment() {
 
-		setKmsManager(new FakeFixedNKmsManager(1, new MaxWebRtcLoadManager(15)));
+    setKmsManager(new FakeFixedNKmsManager(1, new MaxWebRtcLoadManager(15)));
 
-		addUsageSimulation(new NSourcesAddRemoveSinksRandomUsage());
+    addUsageSimulation(new NSourcesAddRemoveSinksRandomUsage());
 
-		addTreeManagerCreator(new TreeManagerCreator() {
-			@Override
-			public TreeManager createTreeManager(KmsManager kmsManager) {
-				return new OneKmsTM(kmsManager);
-			}
-		});
-	}
+    addTreeManagerCreator(new TreeManagerCreator() {
+      @Override
+      public TreeManager createTreeManager(KmsManager kmsManager) {
+        return new OneKmsTM(kmsManager);
+      }
+    });
+  }
 
-	public static void main(String[] args) {
-		new Experiment0().run();
-	}
+  public static void main(String[] args) {
+    new Experiment0().run();
+  }
 }

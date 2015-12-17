@@ -15,30 +15,30 @@ import org.kurento.tree.server.kms.WebRtc;
 
 public class FacadeFakeKmsTest {
 
-	@Test
-	public void basicTreeTest() {
+  @Test
+  public void basicTreeTest() {
 
-		Kms kms = new Kms();
-		Pipeline pipeline = kms.createPipeline();
-		WebRtc master = pipeline.createWebRtc(null);
+    Kms kms = new Kms();
+    Pipeline pipeline = kms.createPipeline();
+    WebRtc master = pipeline.createWebRtc(null);
 
-		for (int i = 0; i < 3; i++) {
-			WebRtc viewer = pipeline.createWebRtc(null);
-			master.connect(viewer);
-		}
+    for (int i = 0; i < 3; i++) {
+      WebRtc viewer = pipeline.createWebRtc(null);
+      master.connect(viewer);
+    }
 
-		assertThat(master.getSinks().size(), is(3));
+    assertThat(master.getSinks().size(), is(3));
 
-		for (Element sink : master.getSinks()) {
-			assertThat(master, is(sink.getSource()));
-		}
+    for (Element sink : master.getSinks()) {
+      assertThat(master, is(sink.getSource()));
+    }
 
-		for (Element sink : new ArrayList<>(master.getSinks())) {
-			sink.disconnect();
-			assertThat(sink.getSource(), is(nullValue()));
-		}
+    for (Element sink : new ArrayList<>(master.getSinks())) {
+      sink.disconnect();
+      assertThat(sink.getSource(), is(nullValue()));
+    }
 
-		assertThat(master.getSinks(), is(Collections.<Element> emptyList()));
+    assertThat(master.getSinks(), is(Collections.<Element> emptyList()));
 
-	}
+  }
 }

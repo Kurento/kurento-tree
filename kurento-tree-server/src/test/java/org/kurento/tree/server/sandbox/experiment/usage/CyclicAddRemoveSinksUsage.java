@@ -8,144 +8,142 @@ import org.kurento.tree.server.treemanager.TreeManager;
 
 public class CyclicAddRemoveSinksUsage extends UsageSimulation {
 
-	public static class TreeUsage {
+  public static class TreeUsage {
 
-		private int iterations;
-		private int maxSinksPerTree;
-		private TreeManager treeManager;
-		private String treeId;
+    private int iterations;
+    private int maxSinksPerTree;
+    private TreeManager treeManager;
+    private String treeId;
 
-		private boolean created = false;
-		private boolean growing = true;
-		private int iteration = 0;
-		private int createIteration = 0;
-		private List<String> sinks = new ArrayList<String>();
-		private int iterationsToCreate;
+    private boolean created = false;
+    private boolean growing = true;
+    private int iteration = 0;
+    private int createIteration = 0;
+    private List<String> sinks = new ArrayList<String>();
+    private int iterationsToCreate;
 
-		public TreeUsage(int numTree, TreeManager treeManager, int iterations,
-				int maxSinksPerTree, int iterationsToCreate) {
-			this.treeManager = treeManager;
-			this.iterations = iterations;
-			this.iterationsToCreate = iterationsToCreate;
-			this.maxSinksPerTree = maxSinksPerTree;
-			this.treeId = getTreeId(numTree);
-		}
+    public TreeUsage(int numTree, TreeManager treeManager, int iterations, int maxSinksPerTree,
+        int iterationsToCreate) {
+      this.treeManager = treeManager;
+      this.iterations = iterations;
+      this.iterationsToCreate = iterationsToCreate;
+      this.maxSinksPerTree = maxSinksPerTree;
+      this.treeId = getTreeId(numTree);
+    }
 
-		public void evolve() {
+    public void evolve() {
 
-			try {
+      try {
 
-				if (!created) {
+        if (!created) {
 
-					if (createIteration < iterationsToCreate) {
+          if (createIteration < iterationsToCreate) {
 
-						createIteration++;
+            createIteration++;
 
-					} else {
+          } else {
 
-						treeManager.createTree(treeId);
-						treeManager.setTreeSource(null, treeId, "XXX");
-						created = true;
-					}
+            treeManager.createTree(treeId);
+            treeManager.setTreeSource(null, treeId, "XXX");
+            created = true;
+          }
 
-				} else if (growing) {
+        } else if (growing) {
 
-					String sinkId = treeManager
-							.addTreeSink(null, treeId, "fakeSdp").getId();
-					sinks.add(treeId + "|" + sinkId);
+          String sinkId = treeManager.addTreeSink(null, treeId, "fakeSdp").getId();
+          sinks.add(treeId + "|" + sinkId);
 
-					if (sinks.size() == maxSinksPerTree) {
-						growing = false;
-						System.out.println("Shrinking Tree " + treeId);
-					}
+          if (sinks.size() == maxSinksPerTree) {
+            growing = false;
+            System.out.println("Shrinking Tree " + treeId);
+          }
 
-				} else {
-					String sink = sinks.remove(0);
-					String[] parts = sink.split("\\|");
-					treeManager.removeTreeSink(parts[0], parts[1]);
+        } else {
+          String sink = sinks.remove(0);
+          String[] parts = sink.split("\\|");
+          treeManager.removeTreeSink(parts[0], parts[1]);
 
-					if (sinks.isEmpty()) {
-						System.out.println("Restarting Tree " + treeId
-								+ " in iteration " + iteration);
-						treeManager.releaseTree(treeId);
-						created = false;
-						growing = true;
-						iteration++;
-					}
-				}
-			} catch (Exception e) {
-				throw e;
-			}
-		}
+          if (sinks.isEmpty()) {
+            System.out.println("Restarting Tree " + treeId + " in iteration " + iteration);
+            treeManager.releaseTree(treeId);
+            created = false;
+            growing = true;
+            iteration++;
+          }
+        }
+      } catch (Exception e) {
+        throw e;
+      }
+    }
 
-		public boolean finished() {
-			return iteration >= iterations;
-		}
-	}
+    public boolean finished() {
+      return iteration >= iterations;
+    }
+  }
 
-	private int numTrees;
-	private int maxSinksPerTree;
-	private int iterations;
-	private long randomSeed;
-	private int iterationsToCreate;
+  private int numTrees;
+  private int maxSinksPerTree;
+  private int iterations;
+  private long randomSeed;
+  private int iterationsToCreate;
 
-	public CyclicAddRemoveSinksUsage(int numTrees, int maxSinksPerTree,
-			int iterations, long randomSeed, int iterationsToCreate) {
-		this.numTrees = numTrees;
-		this.maxSinksPerTree = maxSinksPerTree;
-		this.iterations = iterations;
-		this.randomSeed = randomSeed;
-		this.iterationsToCreate = iterationsToCreate;
-	}
+  public CyclicAddRemoveSinksUsage(int numTrees, int maxSinksPerTree, int iterations,
+      long randomSeed, int iterationsToCreate) {
+    this.numTrees = numTrees;
+    this.maxSinksPerTree = maxSinksPerTree;
+    this.iterations = iterations;
+    this.randomSeed = randomSeed;
+    this.iterationsToCreate = iterationsToCreate;
+  }
 
-	public CyclicAddRemoveSinksUsage() {
-		this(4, 5, 3, 0, 2);
-	}
+  public CyclicAddRemoveSinksUsage() {
+    this(4, 5, 3, 0, 2);
+  }
 
-	@Override
-	public void useTreeManager(TreeManager treeManager) {
+  @Override
+  public void useTreeManager(TreeManager treeManager) {
 
-		List<TreeUsage> trees = new ArrayList<>();
+    List<TreeUsage> trees = new ArrayList<>();
 
-		for (int i = 0; i < numTrees; i++) {
-			trees.add(new TreeUsage(i, treeManager, this.iterations,
-					this.maxSinksPerTree, i * this.iterationsToCreate));
-		}
+    for (int i = 0; i < numTrees; i++) {
+      trees.add(new TreeUsage(i, treeManager, this.iterations, this.maxSinksPerTree,
+          i * this.iterationsToCreate));
+    }
 
-		Random r = null;
-		if (randomSeed != -1) {
-			r = new Random(randomSeed);
-		}
+    Random r = null;
+    if (randomSeed != -1) {
+      r = new Random(randomSeed);
+    }
 
-		int numTree = -1;
-		while (!trees.isEmpty()) {
+    int numTree = -1;
+    while (!trees.isEmpty()) {
 
-			TreeUsage tree;
-			do {
+      TreeUsage tree;
+      do {
 
-				if (r != null) {
-					numTree = r.nextInt(trees.size());
-				} else {
-					numTree = (numTree + 1) % trees.size();
-				}
+        if (r != null) {
+          numTree = r.nextInt(trees.size());
+        } else {
+          numTree = (numTree + 1) % trees.size();
+        }
 
-				tree = trees.get(numTree);
+        tree = trees.get(numTree);
 
-				if (tree.finished()) {
-					trees.remove(tree);
-					if (trees.isEmpty()) {
-						return;
-					} else {
-						tree = null;
-					}
-				}
-			} while (tree == null);
+        if (tree.finished()) {
+          trees.remove(tree);
+          if (trees.isEmpty()) {
+            return;
+          } else {
+            tree = null;
+          }
+        }
+      } while (tree == null);
 
-			tree.evolve();
-		}
-	}
+      tree.evolve();
+    }
+  }
 
-	private static String getTreeId(int numTree) {
-		return "Tree" + numTree;
-	}
+  private static String getTreeId(int numTree) {
+    return "Tree" + numTree;
+  }
 }

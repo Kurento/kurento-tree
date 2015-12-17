@@ -11,21 +11,21 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 public class KurentoTreeClientEmbed {
 
-	public static KurentoTreeClient create(int port){
-		
-		final ConfigurableApplicationContext server = KurentoTreeServerApp.start(port);
-		
-		TreeManager treeMgr = server.getBean(TreeManager.class);
-		
-		JsonRpcClientLocal localClient = new JsonRpcClientLocal(new ClientsJsonRpcHandler(treeMgr));
-		
-		return new KurentoTreeClient(localClient){
-			@Override
-			public void close() throws IOException {
-				super.close();
-				server.close();
-			}
-		};
-	}
-	
+  public static KurentoTreeClient create(int port) {
+
+    final ConfigurableApplicationContext server = KurentoTreeServerApp.start(port);
+
+    TreeManager treeMgr = server.getBean(TreeManager.class);
+
+    JsonRpcClientLocal localClient = new JsonRpcClientLocal(new ClientsJsonRpcHandler(treeMgr));
+
+    return new KurentoTreeClient(localClient) {
+      @Override
+      public void close() throws IOException {
+        super.close();
+        server.close();
+      }
+    };
+  }
+
 }

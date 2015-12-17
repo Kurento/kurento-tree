@@ -4,42 +4,40 @@ import org.kurento.tree.client.TreeException;
 
 public abstract class AbstractOneTreeTM implements TreeManager {
 
-	private static final String DEFAULT_TREE_ID = "TreeId";
+  private static final String DEFAULT_TREE_ID = "TreeId";
 
-	private String treeId;
+  private String treeId;
 
-	protected boolean createdTree = false;
+  protected boolean createdTree = false;
 
-	public AbstractOneTreeTM() {
-		// TODO Auto-generated constructor stub
-	}
+  public AbstractOneTreeTM() {
+    // TODO Auto-generated constructor stub
+  }
 
-	@Override
-	public synchronized String createTree() throws TreeException {
-		if (createdTree) {
-			throw new TreeException(
-					"AotOneTreeManager "
-							+ " can only create one tree and this tree was previously created");
-		}
-		treeId = DEFAULT_TREE_ID;
-		createdTree = true;
-		return treeId;
-	}
+  @Override
+  public synchronized String createTree() throws TreeException {
+    if (createdTree) {
+      throw new TreeException(
+          "AotOneTreeManager " + " can only create one tree and this tree was previously created");
+    }
+    treeId = DEFAULT_TREE_ID;
+    createdTree = true;
+    return treeId;
+  }
 
-	@Override
-	public void createTree(String treeId) throws TreeException {
-		if (createdTree) {
-			throw new TreeException(
-					"AotOneTreeManager "
-							+ " can only create one tree and this tree was previously created");
-		}
-		this.treeId = treeId;
-		createdTree = true;
-	}
+  @Override
+  public void createTree(String treeId) throws TreeException {
+    if (createdTree) {
+      throw new TreeException(
+          "AotOneTreeManager " + " can only create one tree and this tree was previously created");
+    }
+    this.treeId = treeId;
+    createdTree = true;
+  }
 
-	protected void checkTreeId(String treeId) throws TreeException {
-		if (!this.treeId.equals(treeId)) {
-			throw new TreeException("Unknown tree '" + treeId + "'");
-		}
-	}
+  protected void checkTreeId(String treeId) throws TreeException {
+    if (!this.treeId.equals(treeId)) {
+      throw new TreeException("Unknown tree '" + treeId + "'");
+    }
+  }
 }

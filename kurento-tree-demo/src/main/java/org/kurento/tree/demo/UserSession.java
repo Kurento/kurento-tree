@@ -31,31 +31,29 @@ import com.google.gson.JsonObject;
  */
 public class UserSession {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(UserSession.class);
+  private static final Logger log = LoggerFactory.getLogger(UserSession.class);
 
-	private WebSocketSession session;
-	private String sinkId;
+  private WebSocketSession session;
+  private String sinkId;
 
-	public UserSession(WebSocketSession session) {
-		this.session = session;
-	}
+  public UserSession(WebSocketSession session) {
+    this.session = session;
+  }
 
-	public WebSocketSession getSession() {
-		return session;
-	}
+  public WebSocketSession getSession() {
+    return session;
+  }
 
-	public void sendMessage(JsonObject message) throws IOException {
-		log.debug("Sending message from user with session Id '{}': {}",
-				session.getId(), message);
-		session.sendMessage(new TextMessage(message.toString()));
-	}
+  public void sendMessage(JsonObject message) throws IOException {
+    log.debug("Sending message from user with session Id '{}': {}", session.getId(), message);
+    session.sendMessage(new TextMessage(message.toString()));
+  }
 
-	public void setSinkId(String sinkId) {
-		this.sinkId = sinkId;
-	}
+  public void setSinkId(String sinkId) {
+    this.sinkId = sinkId;
+  }
 
-	public String getSinkId() {
-		return sinkId;
-	}
+  public String getSinkId() {
+    return sinkId;
+  }
 }

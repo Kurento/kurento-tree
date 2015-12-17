@@ -33,128 +33,124 @@ import com.google.gson.JsonObject;
 @EnableAutoConfiguration
 public class KurentoTreeServerApp implements JsonRpcConfigurer {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(KurentoTreeServerApp.class);
+  private static final Logger log = LoggerFactory.getLogger(KurentoTreeServerApp.class);
 
-	private static final String UNSECURE_RANDOM_PROPERTY = "unsecureRandom";
-	private static final boolean UNSECURE_RANDOM_DEFAULT = true;
+  private static final String UNSECURE_RANDOM_PROPERTY = "unsecureRandom";
+  private static final boolean UNSECURE_RANDOM_DEFAULT = true;
 
-	public static final String WEBSOCKET_PORT_PROPERTY = "ws.port";
-	public static final String WEBSOCKET_PORT_DEFAULT = "8890";
+  public static final String WEBSOCKET_PORT_PROPERTY = "ws.port";
+  public static final String WEBSOCKET_PORT_DEFAULT = "8890";
 
-	public static final String WEBSOCKET_PATH_PROPERTY = "ws.path";
-	public static final String WEBSOCKET_PATH_DEFAULT = "kurento-tree";
+  public static final String WEBSOCKET_PATH_PROPERTY = "ws.path";
+  public static final String WEBSOCKET_PATH_DEFAULT = "kurento-tree";
 
-	public static final String KMSS_URIS_PROPERTY = "kms.url";
-	public static final String KMSS_URIS_DEFAULT = "ws://localhost:8888/kurento";
+  public static final String KMSS_URIS_PROPERTY = "kms.url";
+  public static final String KMSS_URIS_DEFAULT = "ws://localhost:8888/kurento";
 
-	public static final String KMS_MODE_PROPERTY = "kms.mode";
-	public static final String KMS_MODE_DEFAULT = "registrar";
+  public static final String KMS_MODE_PROPERTY = "kms.mode";
+  public static final String KMS_MODE_DEFAULT = "registrar";
 
-	private KmsMode kmsMode = getProperty(KMS_MODE_PROPERTY, KmsMode.NUBOMEDIA);
+  private KmsMode kmsMode = getProperty(KMS_MODE_PROPERTY, KmsMode.NUBOMEDIA);
 
-	private enum KmsMode {
-		REGISTRAR, NUBOMEDIA
-	}
+  private enum KmsMode {
+    REGISTRAR, NUBOMEDIA
+  }
 
-	private static ConfigurableApplicationContext app;
+  private static ConfigurableApplicationContext app;
 
-	@Bean
-	public KmsManager kmsManager() {
+  @Bean
+  public KmsManager kmsManager() {
 
-		switch (kmsMode) {
-		case REGISTRAR:
-			return new RealElasticKmsManager(Arrays.asList(loadKmsUrl()));
-		case NUBOMEDIA:
-			return new MinWebRtcEpsKmsManager();
-		default:
-			throw new TreeException("Unsupported kmsMode " + kmsMode);
-		}
-	}
+    switch (kmsMode) {
+    case REGISTRAR:
+      return new RealElasticKmsManager(Arrays.asList(loadKmsUrl()));
+    case NUBOMEDIA:
+      return new MinWebRtcEpsKmsManager();
+    default:
+      throw new TreeException("Unsupported kmsMode " + kmsMode);
+    }
+  }
 
-	private String loadKmsUrl() {
-		String kmsUrl = getProperty(KMSS_URIS_PROPERTY, KMSS_URIS_DEFAULT);
+  private String loadKmsUrl() {
+    String kmsUrl = getProperty(KMSS_URIS_PROPERTY, KMSS_URIS_DEFAULT);
 
-		log.info("Configuring Kurento Tree Server to use kms: " + kmsUrl);
+    log.info("Configuring Kurento Tree Server to use kms: " + kmsUrl);
 
-		return kmsUrl;
-	}
+    return kmsUrl;
+  }
 
-	@Bean
-	public TreeManager treeManager() {
+  @Bean
+  public TreeManager treeManager() {
 
-		KmsManager kmsManager = kmsManager();
+    KmsManager kmsManager = kmsManager();
 
-		switch (kmsMode) {
-		case REGISTRAR:
-			return new LessLoadedElasticTM(kmsManager);
-		case NUBOMEDIA:
-			LessLoadedOnlySource2TM treeManager = new LessLoadedOnlySource2TM(
-					kmsManager);
-			((MinWebRtcEpsKmsManager) kmsManager).setKmsListener(treeManager);
+    switch (kmsMode) {
+    case REGISTRAR:
+      return new LessLoadedElasticTM(kmsManager);
+    case NUBOMEDIA:
+      LessLoadedOnlySource2TM treeManager = new LessLoadedOnlySource2TM(kmsManager);
+      ((MinWebRtcEpsKmsManager) kmsManager).setKmsListener(treeManager);
 
-			return treeManager;
-		default:
-			throw new TreeException("Unsupported kmsMode " + kmsMode);
-		}
-	}
+      return treeManager;
+    default:
+      throw new TreeException("Unsupported kmsMode " + kmsMode);
+    }
+  }
 
-	@Override
-	public void registerJsonRpcHandlers(JsonRpcHandlerRegistry registry) {
-		registry.addHandler(clientsJsonRpcHandler().withSockJS(),
-				getProperty(WEBSOCKET_PATH_PROPERTY, WEBSOCKET_PATH_DEFAULT));
+  @Override
+  public void registerJsonRpcHandlers(JsonRpcHandlerRegistry registry) {
+    registry.addHandler(clientsJsonRpcHandler().withSockJS(),
+        getProperty(WEBSOCKET_PATH_PROPERTY, WEBSOCKET_PATH_DEFAULT));
 
-		if (kmsMode == KmsMode.REGISTRAR) {
-			JsonRpcHandler<JsonObject> registrar = new RegistrarJsonRpcHandler(
-					(KmsRegistrar) kmsManager());
+    if (kmsMode == KmsMode.REGISTRAR) {
+      JsonRpcHandler<JsonObject> registrar = new RegistrarJsonRpcHandler(
+          (KmsRegistrar) kmsManager());
 
-			registry.addHandler(registrar, "/registrar");
-		}
-	}
+      registry.addHandler(registrar, "/registrar");
+    }
+  }
 
-	@Bean
-	public ClientsJsonRpcHandler clientsJsonRpcHandler() {
-		return new ClientsJsonRpcHandler(treeManager());
-	}
+  @Bean
+  public ClientsJsonRpcHandler clientsJsonRpcHandler() {
+    return new ClientsJsonRpcHandler(treeManager());
+  }
 
-	public static ConfigurableApplicationContext start() {
-		return start(-1);
-	}
+  public static ConfigurableApplicationContext start() {
+    return start(-1);
+  }
 
-	public static ConfigurableApplicationContext start(int port) {
+  public static ConfigurableApplicationContext start(int port) {
 
-		ConfigFileManager.loadConfigFile("kurento-tree.conf.json");
+    ConfigFileManager.loadConfigFile("kurento-tree.conf.json");
 
-		if (getProperty(UNSECURE_RANDOM_PROPERTY, UNSECURE_RANDOM_DEFAULT)) {
-			log.info("Using /dev/urandom for secure random generation");
-			System.setProperty("java.security.egd", "file:/dev/./urandom");
-		}
+    if (getProperty(UNSECURE_RANDOM_PROPERTY, UNSECURE_RANDOM_DEFAULT)) {
+      log.info("Using /dev/urandom for secure random generation");
+      System.setProperty("java.security.egd", "file:/dev/./urandom");
+    }
 
-		if (port == -1) {
-			port = Integer.parseInt(getProperty(WEBSOCKET_PORT_PROPERTY,
-					WEBSOCKET_PORT_DEFAULT));
-		}
+    if (port == -1) {
+      port = Integer.parseInt(getProperty(WEBSOCKET_PORT_PROPERTY, WEBSOCKET_PORT_DEFAULT));
+    }
 
-		SpringApplication application = new SpringApplication(
-				KurentoTreeServerApp.class);
+    SpringApplication application = new SpringApplication(KurentoTreeServerApp.class);
 
-		Properties properties = new Properties();
-		properties.put("server.port", port);
-		application.setDefaultProperties(properties);
+    Properties properties = new Properties();
+    properties.put("server.port", port);
+    application.setDefaultProperties(properties);
 
-		app = application.run();
+    app = application.run();
 
-		return app;
-	}
+    return app;
+  }
 
-	public static void stop() {
-		if (app != null) {
-			app.close();
-		}
-	}
+  public static void stop() {
+    if (app != null) {
+      app.close();
+    }
+  }
 
-	public static void main(String[] args) throws Exception {
-		start();
-	}
+  public static void main(String[] args) throws Exception {
+    start();
+  }
 
 }

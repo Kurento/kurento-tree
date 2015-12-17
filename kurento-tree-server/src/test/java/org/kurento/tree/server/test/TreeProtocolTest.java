@@ -22,84 +22,79 @@ import org.kurento.tree.server.treemanager.TreeManager;
 
 public class TreeProtocolTest {
 
-	private TreeManager treeMgr;
-	private JsonRpcClientLocal localClient;
-	private KurentoTreeClient client;
+  private TreeManager treeMgr;
+  private JsonRpcClientLocal localClient;
+  private KurentoTreeClient client;
 
-	@Before
-	public void init() {
-		treeMgr = mock(TreeManager.class);
-		localClient = new JsonRpcClientLocal(new ClientsJsonRpcHandler(treeMgr));
-		client = new KurentoTreeClient(localClient);
-	}
+  @Before
+  public void init() {
+    treeMgr = mock(TreeManager.class);
+    localClient = new JsonRpcClientLocal(new ClientsJsonRpcHandler(treeMgr));
+    client = new KurentoTreeClient(localClient);
+  }
 
-	@Test
-	public void testCreateTree() throws IOException, TreeException {
+  @Test
+  public void testCreateTree() throws IOException, TreeException {
 
-		when(treeMgr.createTree()).thenReturn("TreeId");
-		assertThat(client.createTree(), is("TreeId"));
-	}
+    when(treeMgr.createTree()).thenReturn("TreeId");
+    assertThat(client.createTree(), is("TreeId"));
+  }
 
-	@Test
-	public void testCreateTreeWithId() throws IOException, TreeException {
-		client.createTree("TreeId");
-		verify(treeMgr).createTree("TreeId");
-	}
+  @Test
+  public void testCreateTreeWithId() throws IOException, TreeException {
+    client.createTree("TreeId");
+    verify(treeMgr).createTree("TreeId");
+  }
 
-	@Test
-	public void testCreateTreeWithCollision() throws IOException, TreeException {
+  @Test
+  public void testCreateTreeWithCollision() throws IOException, TreeException {
 
-		doThrow(new TreeException("message")).when(treeMgr)
-		.createTree("TreeId");
+    doThrow(new TreeException("message")).when(treeMgr).createTree("TreeId");
 
-		try {
-			client.createTree("TreeId");
-			fail("TreeException should be thrown");
-		} catch (TreeException e) {
-			assertThat(e.getMessage(), containsString("message"));
-		}
-	}
+    try {
+      client.createTree("TreeId");
+      fail("TreeException should be thrown");
+    } catch (TreeException e) {
+      assertThat(e.getMessage(), containsString("message"));
+    }
+  }
 
-	@Test
-	public void testSetTreeSource() throws IOException, TreeException {
+  @Test
+  public void testSetTreeSource() throws IOException, TreeException {
 
-		when(
-				treeMgr.setTreeSource(localClient.getSession(), "TreeId",
-						"sdpOffer")).thenReturn(
-				"sdpAnswer");
+    when(treeMgr.setTreeSource(localClient.getSession(), "TreeId", "sdpOffer"))
+        .thenReturn("sdpAnswer");
 
-		assertThat(client.setTreeSource("TreeId", "sdpOffer"), is("sdpAnswer"));
-	}
+    assertThat(client.setTreeSource("TreeId", "sdpOffer"), is("sdpAnswer"));
+  }
 
-	@Test
-	public void testAddTreeSink() throws IOException, TreeException {
-		when(
-				treeMgr.addTreeSink(localClient.getSession(), "TreeId",
-						"sdpOffer")).thenReturn(
-								new TreeEndpoint("SinkId", "sdpAnswer"));
+  @Test
+  public void testAddTreeSink() throws IOException, TreeException {
+    when(treeMgr.addTreeSink(localClient.getSession(), "TreeId", "sdpOffer"))
+        .thenReturn(new TreeEndpoint("SinkId", "sdpAnswer"));
 
-		assertThat(client.addTreeSink("TreeId", "sdpOffer"),
-				is(new TreeEndpoint("SinkId", "sdpAnswer")));
-	}
+    assertThat(client.addTreeSink("TreeId", "sdpOffer"),
+        is(new TreeEndpoint("SinkId", "sdpAnswer")));
+  }
 
-	@Test
-	public void testReleaseTree() throws IOException, TreeException {
+  @Test
+  public void testReleaseTree() throws IOException, TreeException {
 
-		client.releaseTree("TreeId");
-		verify(treeMgr).releaseTree("TreeId");
-	}
+    client.releaseTree("TreeId");
+    verify(treeMgr).releaseTree("TreeId");
+  }
 
-	@Test
-	public void testRemoveSink() throws IOException, TreeException {
+  @Test
+  public void testRemoveSink() throws IOException, TreeException {
 
-		client.removeTreeSink("TreeId", "SinkId");
-		verify(treeMgr).removeTreeSink("TreeId", "SinkId");
-	}
+    client.removeTreeSink("TreeId", "SinkId");
+    verify(treeMgr).removeTreeSink("TreeId", "SinkId");
+  }
 
-	@Test
-	public void testRemoveSource() throws IOException, TreeException {
+  @Test
+  public void testRemoveSource() throws IOException, TreeException {
 
-		client.removeTreeSource("TreeId");
-		verify(treeMgr).removeTreeSource("TreeId");
-	}
+    client.removeTreeSource("TreeId");
+    verify(treeMgr).removeTreeSource("TreeId");
+  }
 }

@@ -37,76 +37,64 @@ import com.google.gson.JsonObject;
 
 public class ServerJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(ServerJsonRpcHandler.class);
+  private static final Logger log = LoggerFactory.getLogger(ServerJsonRpcHandler.class);
 
-	private static BlockingQueue<IceCandidateInfo> candidates = new ArrayBlockingQueue<IceCandidateInfo>(
-			100);
+  private static BlockingQueue<IceCandidateInfo> candidates = new ArrayBlockingQueue<IceCandidateInfo>(
+      100);
 
-	@Override
-	public void handleRequest(Transaction transaction,
-			Request<JsonObject> request) throws Exception {
-		try {
-			switch (request.getMethod()) {
-			case ICE_CANDIDATE_EVENT:
-				iceCandidateEvent(transaction, request);
-				break;
-			default:
-				log.error("Unrecognized request {}", request);
-				break;
-			}
-		} catch (Exception e) {
-			log.error("Exception processing request {}", request, e);
-			transaction.sendError(e);
-		}
-	}
+  @Override
+  public void handleRequest(Transaction transaction, Request<JsonObject> request) throws Exception {
+    try {
+      switch (request.getMethod()) {
+      case ICE_CANDIDATE_EVENT:
+        iceCandidateEvent(transaction, request);
+        break;
+      default:
+        log.error("Unrecognized request {}", request);
+        break;
+      }
+    } catch (Exception e) {
+      log.error("Exception processing request {}", request, e);
+      transaction.sendError(e);
+    }
+  }
 
-	private void iceCandidateEvent(Transaction transaction,
-			Request<JsonObject> request) {
-		
-		String candidate = JsonTreeUtils.getRequestParam(request,
-				ICE_CANDIDATE, String.class);
-		String sdpMid = JsonTreeUtils.getRequestParam(request, ICE_SDP_MID,
-				String.class);
-		int sdpMLineIndex = JsonTreeUtils.getRequestParam(request,
-				ICE_SDP_M_LINE_INDEX,
-				Integer.class);
-		
-		IceCandidate iceCandidate = new IceCandidate(candidate, sdpMid,
-				sdpMLineIndex);
-		
-		String treeId = JsonTreeUtils.getRequestParam(request, TREE_ID,
-				String.class);
-		String sinkId = JsonTreeUtils.getRequestParam(request, SINK_ID,
-				String.class, true);
-		
-		IceCandidateInfo eventInfo = new IceCandidateInfo(iceCandidate, treeId,
-				sinkId);
+  private void iceCandidateEvent(Transaction transaction, Request<JsonObject> request) {
 
-		log.debug("Enqueueing ICE candidate info {}", eventInfo);
-		try {
-			candidates.put(eventInfo);
-			log.debug("Enqueued ICE candidate info {}", eventInfo);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
+    String candidate = JsonTreeUtils.getRequestParam(request, ICE_CANDIDATE, String.class);
+    String sdpMid = JsonTreeUtils.getRequestParam(request, ICE_SDP_MID, String.class);
+    int sdpMLineIndex = JsonTreeUtils.getRequestParam(request, ICE_SDP_M_LINE_INDEX, Integer.class);
 
-	/**
-	 * Blocks until an element is available and then returns it by removing it
-	 * from the queue.
-	 * 
-	 * @return an {@link IceCandidateInfo} from the queue, null when interrupted
-	 * @see BlockingQueue#take()
-	 */
-	public IceCandidateInfo getCandidateInfo() {
-		try {
-			IceCandidateInfo candidateInfo = candidates.take();
-			log.debug("Dequeued ICE candidate info {}", candidateInfo);
-			return candidateInfo;
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
+    IceCandidate iceCandidate = new IceCandidate(candidate, sdpMid, sdpMLineIndex);
+
+    String treeId = JsonTreeUtils.getRequestParam(request, TREE_ID, String.class);
+    String sinkId = JsonTreeUtils.getRequestParam(request, SINK_ID, String.class, true);
+
+    IceCandidateInfo eventInfo = new IceCandidateInfo(iceCandidate, treeId, sinkId);
+
+    log.debug("Enqueueing ICE candidate info {}", eventInfo);
+    try {
+      candidates.put(eventInfo);
+      log.debug("Enqueued ICE candidate info {}", eventInfo);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Blocks until an element is available and then returns it by removing it from the queue.
+   * 
+   * @return an {@link IceCandidateInfo} from the queue, null when interrupted
+   * @see BlockingQueue#take()
+   */
+  public IceCandidateInfo getCandidateInfo() {
+    try {
+      IceCandidateInfo candidateInfo = candidates.take();
+      log.debug("Dequeued ICE candidate info {}", candidateInfo);
+      return candidateInfo;
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
 }

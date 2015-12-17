@@ -16,110 +16,106 @@ import org.slf4j.LoggerFactory;
 
 public class ReserveKmsManager extends KmsManager {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(ReserveKmsManager.class);
+  private static final Logger log = LoggerFactory.getLogger(ReserveKmsManager.class);
 
-	public static final int KMS_MAX_WEBRTC = PropertiesManager
-			.getProperty("kms.maxWebrtc", 50);
+  public static final int KMS_MAX_WEBRTC = PropertiesManager.getProperty("kms.maxWebrtc", 50);
 
-	private static final boolean REAL_KMS = PropertiesManager
-			.getProperty("kms.real", true);
+  private static final boolean REAL_KMS = PropertiesManager.getProperty("kms.real", true);
 
-	private static final double AVG_LOAD_TO_NEW_KMS = PropertiesManager
-			.getProperty("kms.avgLoadToNewKms", 0.8);
+  private static final double AVG_LOAD_TO_NEW_KMS = PropertiesManager
+      .getProperty("kms.avgLoadToNewKms", 0.8);
 
-	private List<Kms> kmss = new ArrayList<>();
+  private List<Kms> kmss = new ArrayList<>();
 
-	private KmsListener kmsListener;
+  private KmsListener kmsListener;
 
-	public ReserveKmsManager() {
-		addKms();
-	}
+  public ReserveKmsManager() {
+    addKms();
+  }
 
-	private void addKms() {
-		Kms kms;
-		if (REAL_KMS) {
-			kms = new RealKms(KurentoClient
-					.create(Properties.of("loadPoints", KMS_MAX_WEBRTC)));
-		} else {
-			kms = new Kms();
-		}
+  private void addKms() {
+    Kms kms;
+    if (REAL_KMS) {
+      kms = new RealKms(KurentoClient.create(Properties.of("loadPoints", KMS_MAX_WEBRTC)));
+    } else {
+      kms = new Kms();
+    }
 
-		kms.setLoadManager(new MaxWebRtcLoadManager(KMS_MAX_WEBRTC));
-		kms.setLabel("Kms" + kmss.size());
-		kmss.add(kms);
+    kms.setLoadManager(new MaxWebRtcLoadManager(KMS_MAX_WEBRTC));
+    kms.setLabel("Kms" + kmss.size());
+    kmss.add(kms);
 
-		log.debug("Added new kms " + kms.getLabel());
+    log.debug("Added new kms " + kms.getLabel());
 
-		if (kmsListener != null) {
-			kmsListener.kmsAdded(kms);
-		}
-	}
+    if (kmsListener != null) {
+      kmsListener.kmsAdded(kms);
+    }
+  }
 
-	@Override
-	public List<Kms> getKmss() {
-		checkLoadAndUpdateKmss();
-		return kmss;
-	}
+  @Override
+  public List<Kms> getKmss() {
+    checkLoadAndUpdateKmss();
+    return kmss;
+  }
 
-	private void checkLoadAndUpdateKmss() {
+  private void checkLoadAndUpdateKmss() {
 
-		Iterator<Kms> it = kmss.iterator();
+    Iterator<Kms> it = kmss.iterator();
 
-		double loadSum = 0;
-		int numKms = 0;
+    double loadSum = 0;
+    int numKms = 0;
 
-		List<Kms> removedKmss = new ArrayList<Kms>();
+    List<Kms> removedKmss = new ArrayList<Kms>();
 
-		while (it.hasNext()) {
-			Kms kms = it.next();
+    while (it.hasNext()) {
+      Kms kms = it.next();
 
-			double load = kms.getLoad();
+      double load = kms.getLoad();
 
-			if (load == 0) {
-				if (kmss.size() > 1) {
-					it.remove();
-					removedKmss.add(kms);
-				}
-			} else {
-				loadSum += load;
-				numKms++;
-			}
-		}
+      if (load == 0) {
+        if (kmss.size() > 1) {
+          it.remove();
+          removedKmss.add(kms);
+        }
+      } else {
+        loadSum += load;
+        numKms++;
+      }
+    }
 
-		while (loadSum / numKms >= AVG_LOAD_TO_NEW_KMS) {
+    while (loadSum / numKms >= AVG_LOAD_TO_NEW_KMS) {
 
-			if (removedKmss.size() > 0) {
-				Kms kms = removedKmss.remove(0);
-				kmss.add(kms);
-			} else {
-				log.info("Creating new Kms for avg load {}", loadSum / numKms);
-				addKms();
-			}
-			numKms++;
-		}
+      if (removedKmss.size() > 0) {
+        Kms kms = removedKmss.remove(0);
+        kmss.add(kms);
+      } else {
+        log.info("Creating new Kms for avg load {}", loadSum / numKms);
+        addKms();
+      }
+      numKms++;
+    }
 
-		for (Kms kms : removedKmss) {
-			removeKms(kms);
-		}
-	}
+    for (Kms kms : removedKmss) {
+      removeKms(kms);
+    }
+  }
 
-	private void removeKms(Kms kms) {
-		log.info("Removing Kms {}", kms.getLabel());
-		if (kms instanceof RealKms) {
-			KurentoClient client = ((RealKms) kms).getKurentoClient();
-			client.destroy();
-		} else {
-			kms.release();
-		}
+  private void removeKms(Kms kms) {
+    log.info("Removing Kms {}", kms.getLabel());
+    if (kms instanceof RealKms) {
+      KurentoClient client = ((RealKms) kms).getKurentoClient();
+      client.destroy();
+    } else {
+      kms.release();
+    }
 
-		if (kmsListener != null) {
-			kmsListener.kmsRemoved(kms);
-		}
-	}
+    if (kmsListener != null) {
+      kmsListener.kmsRemoved(kms);
+    }
+  }
 
-	public void setKmsListener(KmsListener kmsListener) {
-		this.kmsListener = kmsListener;
-	}
+  public void setKmsListener(KmsListener kmsListener) {
+    this.kmsListener = kmsListener;
+  }
 
 }

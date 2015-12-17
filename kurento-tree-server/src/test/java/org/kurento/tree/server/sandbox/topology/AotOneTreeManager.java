@@ -9,22 +9,21 @@ import org.kurento.tree.server.treemanager.LexicalFixedTM;
 
 public class AotOneTreeManager {
 
-	public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException {
 
-		KmsManager kmsManager = new FakeFixedNKmsManager(4);
-		LexicalFixedTM aot = new LexicalFixedTM(
-				kmsManager);
+    KmsManager kmsManager = new FakeFixedNKmsManager(4);
+    LexicalFixedTM aot = new LexicalFixedTM(kmsManager);
 
-		KmsTopologyGrapher.showTopologyGraphic(kmsManager);
+    KmsTopologyGrapher.showTopologyGraphic(kmsManager);
 
-		String treeId = aot.createTree();
-		aot.setTreeSource(null, treeId, "XXX");
+    String treeId = aot.createTree();
+    aot.setTreeSource(null, treeId, "XXX");
 
-		KmsTopologyGrapher.showTopologyGraphic(kmsManager);
+    KmsTopologyGrapher.showTopologyGraphic(kmsManager);
 
-		aot.addTreeSink(null, treeId, "JJJ");
-		aot.addTreeSink(null, treeId, "FFF");
+    aot.addTreeSink(null, treeId, "JJJ");
+    aot.addTreeSink(null, treeId, "FFF");
 
-		KmsTopologyGrapher.showTopologyGraphic(kmsManager);
-	}
+    KmsTopologyGrapher.showTopologyGraphic(kmsManager);
+  }
 }

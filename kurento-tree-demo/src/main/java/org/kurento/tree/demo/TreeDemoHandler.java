@@ -43,279 +43,259 @@ import com.google.gson.JsonObject;
  */
 public class TreeDemoHandler extends TextWebSocketHandler {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(TreeDemoHandler.class);
-	private static final Gson gson = new GsonBuilder().create();
+  private static final Logger log = LoggerFactory.getLogger(TreeDemoHandler.class);
+  private static final Gson gson = new GsonBuilder().create();
 
-	private ConcurrentHashMap<String, UserSession> viewers = new ConcurrentHashMap<String, UserSession>();
+  private ConcurrentHashMap<String, UserSession> viewers = new ConcurrentHashMap<String, UserSession>();
 
-	@Autowired
-	private KurentoTreeClient kurentoTree;
+  @Autowired
+  private KurentoTreeClient kurentoTree;
 
-	private UserSession masterUserSession;
+  private UserSession masterUserSession;
 
-	private String treeId;
+  private String treeId;
 
-	private Thread notifThread;
+  private Thread notifThread;
 
-	public TreeDemoHandler() {
-		this.notifThread = new Thread("notif:") {
-			@Override
-			public void run() {
-				try {
-					internalSendNotification();
-				} catch (InterruptedException e) {
-					return;
-				}
-			}
-		};
-	}
+  public TreeDemoHandler() {
+    this.notifThread = new Thread("notif:") {
+      @Override
+      public void run() {
+        try {
+          internalSendNotification();
+        } catch (InterruptedException e) {
+          return;
+        }
+      }
+    };
+  }
 
-	/**
-	 * This bean's 'initMethod'.
-	 */
-	public void init() {
-		this.notifThread.start();
-	}
+  /**
+   * This bean's 'initMethod'.
+   */
+  public void init() {
+    this.notifThread.start();
+  }
 
-	/**
-	 * This bean's 'destroyMethod'.
-	 */
-	public void cleanup() {
-		this.notifThread.interrupt();
-	}
+  /**
+   * This bean's 'destroyMethod'.
+   */
+  public void cleanup() {
+    this.notifThread.interrupt();
+  }
 
-	@Override
-	public void handleTextMessage(WebSocketSession session, TextMessage message)
-			throws Exception {
-		JsonObject jsonMessage = gson.fromJson(message.getPayload(),
-				JsonObject.class);
-		log.debug("Incoming message from session '{}': {}", session.getId(),
-				jsonMessage);
+  @Override
+  public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+    JsonObject jsonMessage = gson.fromJson(message.getPayload(), JsonObject.class);
+    log.debug("Incoming message from session '{}': {}", session.getId(), jsonMessage);
 
-		switch (jsonMessage.get("id").getAsString()) {
-		case "master":
-			try {
-				master(session, jsonMessage);
-			} catch (Throwable t) {
-				stop(session);
-				log.error(t.getMessage(), t);
-				JsonObject response = new JsonObject();
-				response.addProperty("id", "masterResponse");
-				response.addProperty("response", "rejected");
-				response.addProperty("message", t.getMessage());
-				session.sendMessage(new TextMessage(response.toString()));
-			}
-			break;
-		case "viewer":
-			try {
-				viewer(session, jsonMessage);
-			} catch (Throwable t) {
-				stop(session);
-				log.error(t.getMessage(), t);
-				JsonObject response = new JsonObject();
-				response.addProperty("id", "viewerResponse");
-				response.addProperty("response", "rejected");
-				response.addProperty("message", t.getMessage());
-				session.sendMessage(new TextMessage(response.toString()));
-			}
-			break;
-		case "stop":
-			stop(session);
-			break;
-		case "onIceCandidate":
-			onIceCandidate(session, jsonMessage);
-			break;
-		default:
-			break;
-		}
-	}
+    switch (jsonMessage.get("id").getAsString()) {
+    case "master":
+      try {
+        master(session, jsonMessage);
+      } catch (Throwable t) {
+        stop(session);
+        log.error(t.getMessage(), t);
+        JsonObject response = new JsonObject();
+        response.addProperty("id", "masterResponse");
+        response.addProperty("response", "rejected");
+        response.addProperty("message", t.getMessage());
+        session.sendMessage(new TextMessage(response.toString()));
+      }
+      break;
+    case "viewer":
+      try {
+        viewer(session, jsonMessage);
+      } catch (Throwable t) {
+        stop(session);
+        log.error(t.getMessage(), t);
+        JsonObject response = new JsonObject();
+        response.addProperty("id", "viewerResponse");
+        response.addProperty("response", "rejected");
+        response.addProperty("message", t.getMessage());
+        session.sendMessage(new TextMessage(response.toString()));
+      }
+      break;
+    case "stop":
+      stop(session);
+      break;
+    case "onIceCandidate":
+      onIceCandidate(session, jsonMessage);
+      break;
+    default:
+      break;
+    }
+  }
 
-	private synchronized void master(WebSocketSession session,
-			JsonObject jsonMessage) throws IOException {
+  private synchronized void master(WebSocketSession session, JsonObject jsonMessage)
+      throws IOException {
 
-		if (masterUserSession == null) {
-			masterUserSession = new UserSession(session);
+    if (masterUserSession == null) {
+      masterUserSession = new UserSession(session);
 
-			treeId = kurentoTree.createTree();
+      treeId = kurentoTree.createTree();
 
-			String sdpOffer = jsonMessage.getAsJsonPrimitive("sdpOffer")
-					.getAsString();
+      String sdpOffer = jsonMessage.getAsJsonPrimitive("sdpOffer").getAsString();
 
-			String sdpAnswer = kurentoTree.setTreeSource(treeId, sdpOffer);
+      String sdpAnswer = kurentoTree.setTreeSource(treeId, sdpOffer);
 
-			JsonObject response = new JsonObject();
-			response.addProperty("id", "masterResponse");
-			response.addProperty("response", "accepted");
-			response.addProperty("sdpAnswer", sdpAnswer);
-			masterUserSession.sendMessage(response);
+      JsonObject response = new JsonObject();
+      response.addProperty("id", "masterResponse");
+      response.addProperty("response", "accepted");
+      response.addProperty("sdpAnswer", sdpAnswer);
+      masterUserSession.sendMessage(response);
 
-		} else {
+    } else {
 
-			JsonObject response = new JsonObject();
-			response.addProperty("id", "masterResponse");
-			response.addProperty("response", "rejected");
-			response.addProperty("message",
-					"Another user is currently acting as sender. Try again later ...");
-			session.sendMessage(new TextMessage(response.toString()));
-		}
-	}
+      JsonObject response = new JsonObject();
+      response.addProperty("id", "masterResponse");
+      response.addProperty("response", "rejected");
+      response.addProperty("message",
+          "Another user is currently acting as sender. Try again later ...");
+      session.sendMessage(new TextMessage(response.toString()));
+    }
+  }
 
-	private synchronized void viewer(WebSocketSession session,
-			JsonObject jsonMessage) throws IOException {
+  private synchronized void viewer(WebSocketSession session, JsonObject jsonMessage)
+      throws IOException {
 
-		if (masterUserSession == null) {
+    if (masterUserSession == null) {
 
-			JsonObject response = new JsonObject();
-			response.addProperty("id", "viewerResponse");
-			response.addProperty("response", "rejected");
-			response.addProperty("message",
-					"No active sender now. Become sender or . Try again later ...");
-			session.sendMessage(new TextMessage(response.toString()));
+      JsonObject response = new JsonObject();
+      response.addProperty("id", "viewerResponse");
+      response.addProperty("response", "rejected");
+      response.addProperty("message",
+          "No active sender now. Become sender or . Try again later ...");
+      session.sendMessage(new TextMessage(response.toString()));
 
-		} else {
+    } else {
 
-			if (viewers.containsKey(session.getId())) {
-				JsonObject response = new JsonObject();
-				response.addProperty("id", "viewerResponse");
-				response.addProperty("response", "rejected");
-				response.addProperty(
-						"message",
-						"You are already viewing in this session. Use a different browser to add additional viewers.");
-				session.sendMessage(new TextMessage(response.toString()));
-				return;
-			}
+      if (viewers.containsKey(session.getId())) {
+        JsonObject response = new JsonObject();
+        response.addProperty("id", "viewerResponse");
+        response.addProperty("response", "rejected");
+        response.addProperty("message",
+            "You are already viewing in this session. Use a different browser to add additional viewers.");
+        session.sendMessage(new TextMessage(response.toString()));
+        return;
+      }
 
-			UserSession viewer = new UserSession(session);
-			viewers.put(session.getId(), viewer);
+      UserSession viewer = new UserSession(session);
+      viewers.put(session.getId(), viewer);
 
-			String sdpOffer = jsonMessage.getAsJsonPrimitive("sdpOffer")
-					.getAsString();
+      String sdpOffer = jsonMessage.getAsJsonPrimitive("sdpOffer").getAsString();
 
-			TreeEndpoint treeEndpoint = kurentoTree.addTreeSink(treeId,
-					sdpOffer);
-			viewer.setSinkId(treeEndpoint.getId());
+      TreeEndpoint treeEndpoint = kurentoTree.addTreeSink(treeId, sdpOffer);
+      viewer.setSinkId(treeEndpoint.getId());
 
-			String sdpAnswer = treeEndpoint.getSdp();
+      String sdpAnswer = treeEndpoint.getSdp();
 
-			JsonObject response = new JsonObject();
-			response.addProperty("id", "viewerResponse");
-			response.addProperty("response", "accepted");
-			response.addProperty("sdpAnswer", sdpAnswer);
-			viewer.sendMessage(response);
-		}
-	}
+      JsonObject response = new JsonObject();
+      response.addProperty("id", "viewerResponse");
+      response.addProperty("response", "accepted");
+      response.addProperty("sdpAnswer", sdpAnswer);
+      viewer.sendMessage(response);
+    }
+  }
 
-	private synchronized void stop(WebSocketSession session) throws IOException {
-		String sessionId = session.getId();
-		if (masterUserSession != null
-				&& masterUserSession.getSession().getId().equals(sessionId)) {
+  private synchronized void stop(WebSocketSession session) throws IOException {
+    String sessionId = session.getId();
+    if (masterUserSession != null && masterUserSession.getSession().getId().equals(sessionId)) {
 
-			for (UserSession viewer : viewers.values()) {
-				JsonObject response = new JsonObject();
-				response.addProperty("id", "stopCommunication");
-				viewer.sendMessage(response);
-			}
+      for (UserSession viewer : viewers.values()) {
+        JsonObject response = new JsonObject();
+        response.addProperty("id", "stopCommunication");
+        viewer.sendMessage(response);
+      }
 
-			log.info("Releasing media pipeline");
-			kurentoTree.releaseTree(treeId);
-			if (viewers.isEmpty())
-				treeId = null;
-			masterUserSession = null;
+      log.info("Releasing media pipeline");
+      kurentoTree.releaseTree(treeId);
+      if (viewers.isEmpty())
+        treeId = null;
+      masterUserSession = null;
 
-		} else if (viewers.containsKey(sessionId)) {
+    } else if (viewers.containsKey(sessionId)) {
 
-			String sinkId = viewers.get(sessionId).getSinkId();
-			if (sinkId != null) {
-				kurentoTree.removeTreeSink(treeId, sinkId);
-			}
-			viewers.remove(sessionId);
-			if (viewers.isEmpty())
-				treeId = null;
-		}
-	}
+      String sinkId = viewers.get(sessionId).getSinkId();
+      if (sinkId != null) {
+        kurentoTree.removeTreeSink(treeId, sinkId);
+      }
+      viewers.remove(sessionId);
+      if (viewers.isEmpty())
+        treeId = null;
+    }
+  }
 
-	private synchronized void onIceCandidate(WebSocketSession session,
-			JsonObject jsonMessage) throws IOException {
-		String sessionId = session.getId();
-		String sinkId = null;
-		if (viewers.containsKey(sessionId))
-			sinkId = viewers.get(sessionId).getSinkId();
-		else if (masterUserSession == null
-				|| !masterUserSession.getSession().getId().equals(sessionId)) {
-			log.warn("No active user session found for id " + sessionId
-					+ ". Ice candidate discarded: " + jsonMessage);
-			return;
-		}
+  private synchronized void onIceCandidate(WebSocketSession session, JsonObject jsonMessage)
+      throws IOException {
+    String sessionId = session.getId();
+    String sinkId = null;
+    if (viewers.containsKey(sessionId))
+      sinkId = viewers.get(sessionId).getSinkId();
+    else if (masterUserSession == null
+        || !masterUserSession.getSession().getId().equals(sessionId)) {
+      log.warn("No active user session found for id " + sessionId + ". Ice candidate discarded: "
+          + jsonMessage);
+      return;
+    }
 
-		String candidate = jsonMessage.get(ProtocolElements.ICE_CANDIDATE)
-				.getAsString();
-		int sdpMLineIndex = jsonMessage.get(
-				ProtocolElements.ICE_SDP_M_LINE_INDEX).getAsInt();
-		String sdpMid = jsonMessage.get(ProtocolElements.ICE_SDP_MID)
-				.getAsString();
-		kurentoTree.addIceCandidate(treeId, sinkId, new IceCandidate(candidate,
-				sdpMid, sdpMLineIndex));
-	}
+    String candidate = jsonMessage.get(ProtocolElements.ICE_CANDIDATE).getAsString();
+    int sdpMLineIndex = jsonMessage.get(ProtocolElements.ICE_SDP_M_LINE_INDEX).getAsInt();
+    String sdpMid = jsonMessage.get(ProtocolElements.ICE_SDP_MID).getAsString();
+    kurentoTree.addIceCandidate(treeId, sinkId, new IceCandidate(candidate, sdpMid, sdpMLineIndex));
+  }
 
-	private void internalSendNotification() throws InterruptedException {
-		log.info("Starting gathering candidates from server by polling blocking queue");
-		while (true) {
-			try {
-				IceCandidateInfo candidateInfo = kurentoTree
-						.getServerCandidate();
-				if (candidateInfo == null) {
-					log.info("Finished gathering candidates from server (notif thread exiting)");
-					return;
-				}
-				log.debug("Sending notification {}", candidateInfo);
-				WebSocketSession session = null;
-				if (!candidateInfo.getTreeId().equals(treeId))
-					throw new TreeException(
-							"Unrecognized ice candidate info for current tree "
-									+ treeId + " : " + candidateInfo);
-				if (candidateInfo.getSinkId() == null) {
-					if (masterUserSession == null)
-						throw new TreeException(
-								"No sender session, so candidate info will be discarded: "
-										+ candidateInfo);
-					session = masterUserSession.getSession();
-				} else {
-					// TODO improve, maybe keep sinkIds and sessionIds in a
-					// separate map
-					for (UserSession userSession : viewers.values())
-						if (candidateInfo.getSinkId() != null && userSession.getSinkId().equals(
-								candidateInfo.getSinkId())) {
-							session = userSession.getSession();
-							break;
-						}
-				}
-				if (session == null)
-					throw new TreeException(
-							"No viewer session for the 'sinkId' from candidate info, will be discarded: "
-									+ candidateInfo);
-				JsonObject notification = new JsonObject();
-				notification.addProperty("id",
-						ProtocolElements.ICE_CANDIDATE_EVENT);
-				notification.addProperty(ProtocolElements.ICE_CANDIDATE,
-						candidateInfo.getIceCandidate().getCandidate());
-				notification.addProperty(ProtocolElements.ICE_SDP_M_LINE_INDEX,
-						candidateInfo.getIceCandidate().getSdpMLineIndex());
-				notification.addProperty(ProtocolElements.ICE_SDP_MID,
-						candidateInfo.getIceCandidate().getSdpMid());
-				session.sendMessage(new TextMessage(notification.toString()));
-			} catch (Exception e) {
-				log.warn(
-						"Exception while processing ICE candidate and sending notification",
-						e);
-			}
-		}
-	}
+  private void internalSendNotification() throws InterruptedException {
+    log.info("Starting gathering candidates from server by polling blocking queue");
+    while (true) {
+      try {
+        IceCandidateInfo candidateInfo = kurentoTree.getServerCandidate();
+        if (candidateInfo == null) {
+          log.info("Finished gathering candidates from server (notif thread exiting)");
+          return;
+        }
+        log.debug("Sending notification {}", candidateInfo);
+        WebSocketSession session = null;
+        if (!candidateInfo.getTreeId().equals(treeId))
+          throw new TreeException(
+              "Unrecognized ice candidate info for current tree " + treeId + " : " + candidateInfo);
+        if (candidateInfo.getSinkId() == null) {
+          if (masterUserSession == null)
+            throw new TreeException(
+                "No sender session, so candidate info will be discarded: " + candidateInfo);
+          session = masterUserSession.getSession();
+        } else {
+          // TODO improve, maybe keep sinkIds and sessionIds in a
+          // separate map
+          for (UserSession userSession : viewers.values())
+            if (candidateInfo.getSinkId() != null
+                && userSession.getSinkId().equals(candidateInfo.getSinkId())) {
+              session = userSession.getSession();
+              break;
+            }
+        }
+        if (session == null)
+          throw new TreeException(
+              "No viewer session for the 'sinkId' from candidate info, will be discarded: "
+                  + candidateInfo);
+        JsonObject notification = new JsonObject();
+        notification.addProperty("id", ProtocolElements.ICE_CANDIDATE_EVENT);
+        notification.addProperty(ProtocolElements.ICE_CANDIDATE,
+            candidateInfo.getIceCandidate().getCandidate());
+        notification.addProperty(ProtocolElements.ICE_SDP_M_LINE_INDEX,
+            candidateInfo.getIceCandidate().getSdpMLineIndex());
+        notification.addProperty(ProtocolElements.ICE_SDP_MID,
+            candidateInfo.getIceCandidate().getSdpMid());
+        session.sendMessage(new TextMessage(notification.toString()));
+      } catch (Exception e) {
+        log.warn("Exception while processing ICE candidate and sending notification", e);
+      }
+    }
+  }
 
-	@Override
-	public void afterConnectionClosed(WebSocketSession session,
-			CloseStatus status) throws Exception {
-		stop(session);
-	}
+  @Override
+  public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+    stop(session);
+  }
 
 }

@@ -13,40 +13,39 @@ import org.kurento.tree.server.treemanager.TreeManager;
 
 public class AotOneTreeManagerReport {
 
-	public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException {
 
-		KmsManager kmsManager = new FakeFixedNKmsManager(4);
+    KmsManager kmsManager = new FakeFixedNKmsManager(4);
 
-		TreeManager aot = new LessLoadedOneTreeFixedTM(kmsManager);
+    TreeManager aot = new LessLoadedOneTreeFixedTM(kmsManager);
 
-		TreeManagerReportCreator reportCreator = new TreeManagerReportCreator(
-				kmsManager, "Report");
+    TreeManagerReportCreator reportCreator = new TreeManagerReportCreator(kmsManager, "Report");
 
-		reportCreator.setTreeManager(aot);
+    reportCreator.setTreeManager(aot);
 
-		aot = reportCreator;
+    aot = reportCreator;
 
-		String treeId = aot.createTree();
-		aot.setTreeSource(null, treeId, "XXX");
+    String treeId = aot.createTree();
+    aot.setTreeSource(null, treeId, "XXX");
 
-		List<String> sinks = new ArrayList<String>();
-		try {
-			while (true) {
+    List<String> sinks = new ArrayList<String>();
+    try {
+      while (true) {
 
-				for (int i = 0; i < 5; i++) {
-					sinks.add(aot.addTreeSink(null, treeId, "fakeSdp").getId());
-				}
+        for (int i = 0; i < 5; i++) {
+          sinks.add(aot.addTreeSink(null, treeId, "fakeSdp").getId());
+        }
 
-				for (int i = 0; i < 2; i++) {
-					int sinkNumber = (int) (Math.random() * sinks.size());
-					String sinkId = sinks.remove(sinkNumber);
-					aot.removeTreeSink(treeId, sinkId);
-				}
-			}
-		} catch (TreeException e) {
-			System.out.println("Reached maximum tree capacity");
-		}
+        for (int i = 0; i < 2; i++) {
+          int sinkNumber = (int) (Math.random() * sinks.size());
+          String sinkId = sinks.remove(sinkNumber);
+          aot.removeTreeSink(treeId, sinkId);
+        }
+      }
+    } catch (TreeException e) {
+      System.out.println("Reached maximum tree capacity");
+    }
 
-		reportCreator.createReport("/home/mica/Data/Kurento/treereport.html");
-	}
+    reportCreator.createReport("/home/mica/Data/Kurento/treereport.html");
+  }
 }

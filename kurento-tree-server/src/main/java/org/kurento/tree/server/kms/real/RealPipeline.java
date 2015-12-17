@@ -8,37 +8,37 @@ import org.kurento.tree.server.kms.WebRtc;
 
 public class RealPipeline extends Pipeline {
 
-	private MediaPipeline mediaPipeline;
+  private MediaPipeline mediaPipeline;
 
-	public RealPipeline(RealKms realKms) {
-		super(realKms);
-		mediaPipeline = realKms.getKurentoClient().createMediaPipeline();
-	}
+  public RealPipeline(RealKms realKms) {
+    super(realKms);
+    mediaPipeline = realKms.getKurentoClient().createMediaPipeline();
+  }
 
-	public MediaPipeline getMediaPipeline() {
-		return mediaPipeline;
-	}
+  public MediaPipeline getMediaPipeline() {
+    return mediaPipeline;
+  }
 
-	@Override
-	protected WebRtc newWebRtc(TreeElementSession session) {
-		return new RealWebRtc(this, session);
-	}
+  @Override
+  protected WebRtc newWebRtc(TreeElementSession session) {
+    return new RealWebRtc(this, session);
+  }
 
-	@Override
-	protected Plumber newPlumber() {
-		return new RealPlumber(this);
-	}
+  @Override
+  protected Plumber newPlumber() {
+    return new RealPlumber(this);
+  }
 
-	@Override
-	public void release() {
-		super.release();
-		mediaPipeline.release();
-	}
+  @Override
+  public void release() {
+    super.release();
+    mediaPipeline.release();
+  }
 
-	@Override
-	public void setLabel(String label) {
-		super.setLabel(label);
-		mediaPipeline.setName(label);
-	}
+  @Override
+  public void setLabel(String label) {
+    super.setLabel(label);
+    mediaPipeline.setName(label);
+  }
 
 }

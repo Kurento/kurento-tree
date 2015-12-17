@@ -1,5 +1,6 @@
 package org.kurento.tree.client;
 
+import static org.kurento.tree.client.internal.ProtocolElements.ADD_ICE_CANDIDATE_METHOD;
 import static org.kurento.tree.client.internal.ProtocolElements.ADD_TREE_SINK_METHOD;
 import static org.kurento.tree.client.internal.ProtocolElements.ANSWER_SDP;
 import static org.kurento.tree.client.internal.ProtocolElements.CREATE_TREE_METHOD;
@@ -7,7 +8,6 @@ import static org.kurento.tree.client.internal.ProtocolElements.ICE_CANDIDATE;
 import static org.kurento.tree.client.internal.ProtocolElements.ICE_SDP_MID;
 import static org.kurento.tree.client.internal.ProtocolElements.ICE_SDP_M_LINE_INDEX;
 import static org.kurento.tree.client.internal.ProtocolElements.OFFER_SDP;
-import static org.kurento.tree.client.internal.ProtocolElements.ADD_ICE_CANDIDATE_METHOD;
 import static org.kurento.tree.client.internal.ProtocolElements.RELEASE_TREE_METHOD;
 import static org.kurento.tree.client.internal.ProtocolElements.REMOVE_TREE_SINK_METHOD;
 import static org.kurento.tree.client.internal.ProtocolElements.REMOVE_TREE_SOURCE_METHOD;
@@ -29,172 +29,163 @@ import com.google.gson.JsonObject;
 
 public class KurentoTreeClient {
 
-	private JsonRpcClient client;
-	private ServerJsonRpcHandler handler;
+  private JsonRpcClient client;
+  private ServerJsonRpcHandler handler;
 
-	public KurentoTreeClient(String wsUri) {
-		this(new JsonRpcClientWebSocket(wsUri+"/websocket"));
-	}
+  public KurentoTreeClient(String wsUri) {
+    this(new JsonRpcClientWebSocket(wsUri + "/websocket"));
+  }
 
-	public KurentoTreeClient(JsonRpcClient client) {
-		this.client = client;
-		this.handler = new ServerJsonRpcHandler();
-		this.client.setServerRequestHandler(this.handler);
-	}
+  public KurentoTreeClient(JsonRpcClient client) {
+    this.client = client;
+    this.handler = new ServerJsonRpcHandler();
+    this.client.setServerRequestHandler(this.handler);
+  }
 
-	public KurentoTreeClient(JsonRpcClient client, ServerJsonRpcHandler handler) {
-		this.client = client;
-		this.handler = handler;
-		this.client.setServerRequestHandler(this.handler);
-	}
+  public KurentoTreeClient(JsonRpcClient client, ServerJsonRpcHandler handler) {
+    this.client = client;
+    this.handler = handler;
+    this.client.setServerRequestHandler(this.handler);
+  }
 
-	public String createTree() throws IOException {
-		JsonElement response = client.sendRequest(CREATE_TREE_METHOD);
-		return JsonUtils.extractJavaValueFromResult(response, String.class);
-	}
+  public String createTree() throws IOException {
+    JsonElement response = client.sendRequest(CREATE_TREE_METHOD);
+    return JsonUtils.extractJavaValueFromResult(response, String.class);
+  }
 
-	public void createTree(String treeId) throws IOException {
-		JsonObject params = new JsonObject();
-		params.addProperty(TREE_ID, treeId);
-		try {
-			client.sendRequest(CREATE_TREE_METHOD, params);
-		} catch (JsonRpcErrorException e) {
-			processException(e);
-		}
-	}
+  public void createTree(String treeId) throws IOException {
+    JsonObject params = new JsonObject();
+    params.addProperty(TREE_ID, treeId);
+    try {
+      client.sendRequest(CREATE_TREE_METHOD, params);
+    } catch (JsonRpcErrorException e) {
+      processException(e);
+    }
+  }
 
-	public void releaseTree(String treeId) throws TreeException, IOException {
-		JsonObject params = new JsonObject();
-		params.addProperty(TREE_ID, treeId);
-		try {
-			client.sendRequest(RELEASE_TREE_METHOD, params);
-		} catch (JsonRpcErrorException e) {
-			processException(e);
-		}
-	}
+  public void releaseTree(String treeId) throws TreeException, IOException {
+    JsonObject params = new JsonObject();
+    params.addProperty(TREE_ID, treeId);
+    try {
+      client.sendRequest(RELEASE_TREE_METHOD, params);
+    } catch (JsonRpcErrorException e) {
+      processException(e);
+    }
+  }
 
-	public String setTreeSource(String treeId, String offerSdp)
-			throws TreeException, IOException {
+  public String setTreeSource(String treeId, String offerSdp) throws TreeException, IOException {
 
-		JsonObject params = new JsonObject();
-		params.addProperty(TREE_ID, treeId);
-		params.addProperty(OFFER_SDP, offerSdp);
+    JsonObject params = new JsonObject();
+    params.addProperty(TREE_ID, treeId);
+    params.addProperty(OFFER_SDP, offerSdp);
 
-		try {
+    try {
 
-			JsonElement result = client.sendRequest(SET_TREE_SOURCE_METHOD,
-					params);
-			return JsonTreeUtils.getResponseProperty(result, ANSWER_SDP,
-					String.class);
-		} catch (JsonRpcErrorException e) {
-			processException(e);
-			return null;
-		}
-	}
+      JsonElement result = client.sendRequest(SET_TREE_SOURCE_METHOD, params);
+      return JsonTreeUtils.getResponseProperty(result, ANSWER_SDP, String.class);
+    } catch (JsonRpcErrorException e) {
+      processException(e);
+      return null;
+    }
+  }
 
-	public void removeTreeSource(String treeId) throws TreeException,
-	IOException {
+  public void removeTreeSource(String treeId) throws TreeException, IOException {
 
-		JsonObject params = new JsonObject();
-		params.addProperty(TREE_ID, treeId);
+    JsonObject params = new JsonObject();
+    params.addProperty(TREE_ID, treeId);
 
-		try {
+    try {
 
-			client.sendRequest(REMOVE_TREE_SOURCE_METHOD, params);
+      client.sendRequest(REMOVE_TREE_SOURCE_METHOD, params);
 
-		} catch (JsonRpcErrorException e) {
-			processException(e);
-		}
-	}
+    } catch (JsonRpcErrorException e) {
+      processException(e);
+    }
+  }
 
-	public TreeEndpoint addTreeSink(String treeId, String offerSdp)
-			throws IOException, TreeException {
+  public TreeEndpoint addTreeSink(String treeId, String offerSdp)
+      throws IOException, TreeException {
 
-		JsonObject params = new JsonObject();
-		params.addProperty(TREE_ID, treeId);
-		params.addProperty(OFFER_SDP, offerSdp);
+    JsonObject params = new JsonObject();
+    params.addProperty(TREE_ID, treeId);
+    params.addProperty(OFFER_SDP, offerSdp);
 
-		try {
+    try {
 
-			JsonElement result = client.sendRequest(ADD_TREE_SINK_METHOD,
-					params);
+      JsonElement result = client.sendRequest(ADD_TREE_SINK_METHOD, params);
 
-			return new TreeEndpoint(JsonTreeUtils.getResponseProperty(result,
-					ANSWER_SDP, String.class),
-					JsonTreeUtils.getResponseProperty(result, SINK_ID,
-							String.class));
+      return new TreeEndpoint(JsonTreeUtils.getResponseProperty(result, ANSWER_SDP, String.class),
+          JsonTreeUtils.getResponseProperty(result, SINK_ID, String.class));
 
-		} catch (JsonRpcErrorException e) {
-			processException(e);
-			return null;
-		}
-	}
+    } catch (JsonRpcErrorException e) {
+      processException(e);
+      return null;
+    }
+  }
 
-	public void removeTreeSink(String treeId, String sinkId)
-			throws TreeException, IOException {
+  public void removeTreeSink(String treeId, String sinkId) throws TreeException, IOException {
 
-		JsonObject params = new JsonObject();
-		params.addProperty(TREE_ID, treeId);
-		params.addProperty(SINK_ID, sinkId);
+    JsonObject params = new JsonObject();
+    params.addProperty(TREE_ID, treeId);
+    params.addProperty(SINK_ID, sinkId);
 
-		try {
+    try {
 
-			client.sendRequest(REMOVE_TREE_SINK_METHOD, params);
+      client.sendRequest(REMOVE_TREE_SINK_METHOD, params);
 
-		} catch (JsonRpcErrorException e) {
-			processException(e);
-		}
-	}
+    } catch (JsonRpcErrorException e) {
+      processException(e);
+    }
+  }
 
-	/**
-	 * Polls the candidates list maintained by this client to obtain a candidate
-	 * gathered on the server side. This method blocks until there is a
-	 * candidate to return. This is a one-time operation for the returned
-	 * element.
-	 * 
-	 * @return the gathered candidate, null when interrupted while waiting
-	 */
-	public IceCandidateInfo getServerCandidate() {
-		return this.handler.getCandidateInfo();
-	}
+  /**
+   * Polls the candidates list maintained by this client to obtain a candidate gathered on the
+   * server side. This method blocks until there is a candidate to return. This is a one-time
+   * operation for the returned element.
+   * 
+   * @return the gathered candidate, null when interrupted while waiting
+   */
+  public IceCandidateInfo getServerCandidate() {
+    return this.handler.getCandidateInfo();
+  }
 
-	/**
-	 * Notifies the server of a gathered ICE candidate on the client side.
-	 * 
-	 * @param treeId
-	 *            the tree identifier
-	 * @param sinkId
-	 *            optional (nullable) identifier
-	 * @param candidate
-	 *            the gathered candidate
-	 * @throws TreeException
-	 * @throws IOException
-	 */
-	public void addIceCandidate(String treeId, String sinkId,
-			IceCandidate candidate) throws TreeException, IOException {
-		JsonObject params = new JsonObject();
-		params.addProperty(TREE_ID, treeId);
-		if (sinkId != null && !sinkId.isEmpty())
-			params.addProperty(SINK_ID, sinkId);
-		params.addProperty(ICE_CANDIDATE, candidate.getCandidate());
-		params.addProperty(ICE_SDP_M_LINE_INDEX, candidate.getSdpMLineIndex());
-		params.addProperty(ICE_SDP_MID, candidate.getSdpMid());
-		try {
-			client.sendRequest(ADD_ICE_CANDIDATE_METHOD, params);
-		} catch (JsonRpcErrorException e) {
-			processException(e);
-		}
-	}
+  /**
+   * Notifies the server of a gathered ICE candidate on the client side.
+   * 
+   * @param treeId
+   *          the tree identifier
+   * @param sinkId
+   *          optional (nullable) identifier
+   * @param candidate
+   *          the gathered candidate
+   * @throws TreeException
+   * @throws IOException
+   */
+  public void addIceCandidate(String treeId, String sinkId, IceCandidate candidate)
+      throws TreeException, IOException {
+    JsonObject params = new JsonObject();
+    params.addProperty(TREE_ID, treeId);
+    if (sinkId != null && !sinkId.isEmpty())
+      params.addProperty(SINK_ID, sinkId);
+    params.addProperty(ICE_CANDIDATE, candidate.getCandidate());
+    params.addProperty(ICE_SDP_M_LINE_INDEX, candidate.getSdpMLineIndex());
+    params.addProperty(ICE_SDP_MID, candidate.getSdpMid());
+    try {
+      client.sendRequest(ADD_ICE_CANDIDATE_METHOD, params);
+    } catch (JsonRpcErrorException e) {
+      processException(e);
+    }
+  }
 
-	public void close() throws IOException {
-		this.client.close();
-	}
-	
-	private void processException(JsonRpcErrorException e) throws TreeException {
-		if (e.getCode() == 2) {
-			throw new TreeException(e.getMessage());
-		} else {
-			throw e;
-		}
-	}
+  public void close() throws IOException {
+    this.client.close();
+  }
+
+  private void processException(JsonRpcErrorException e) throws TreeException {
+    if (e.getCode() == 2) {
+      throw new TreeException(e.getMessage());
+    } else {
+      throw e;
+    }
+  }
 }

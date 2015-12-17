@@ -11,22 +11,21 @@ import org.kurento.tree.server.treemanager.TreeManager;
 
 public class Experiment6 extends Experiment {
 
-	public void configureExperiment() {
+  public void configureExperiment() {
 
-		setKmsManager(new FakeElasticKmsManager(0.8, 2, 10,
-				new MaxWebRtcLoadManager(5), true));
+    setKmsManager(new FakeElasticKmsManager(0.8, 2, 10, new MaxWebRtcLoadManager(5), true));
 
-		addUsageSimulation(new CyclicAddRemoveSinksUsage(3, 5, 2, -1, 0));
+    addUsageSimulation(new CyclicAddRemoveSinksUsage(3, 5, 2, -1, 0));
 
-		addTreeManagerCreator(new TreeManagerCreator() {
-			@Override
-			public TreeManager createTreeManager(KmsManager kmsManager) {
-				return new LessLoadedElasticAllKMSsTM(kmsManager, 5);
-			}
-		});
-	}
+    addTreeManagerCreator(new TreeManagerCreator() {
+      @Override
+      public TreeManager createTreeManager(KmsManager kmsManager) {
+        return new LessLoadedElasticAllKMSsTM(kmsManager, 5);
+      }
+    });
+  }
 
-	public static void main(String[] args) {
-		new Experiment6().run();
-	}
+  public static void main(String[] args) {
+    new Experiment6().run();
+  }
 }

@@ -7,25 +7,21 @@ import org.kurento.tree.server.treemanager.LexicalFixedTM;
 
 public class AotOneTreeManagerSvg {
 
-	public static void main(String[] args) {
+  public static void main(String[] args) {
 
-		KmsManager kmsManager = new FakeFixedNKmsManager(4);
-		LexicalFixedTM aot = new LexicalFixedTM(
-				kmsManager);
+    KmsManager kmsManager = new FakeFixedNKmsManager(4);
+    LexicalFixedTM aot = new LexicalFixedTM(kmsManager);
 
-		System.out.println(KmsTopologyGrapher
-				.createSvgTopologyGrapher(kmsManager));
+    System.out.println(KmsTopologyGrapher.createSvgTopologyGrapher(kmsManager));
 
-		String treeId = aot.createTree();
-		aot.setTreeSource(null, treeId, "XXX");
+    String treeId = aot.createTree();
+    aot.setTreeSource(null, treeId, "XXX");
 
-		System.out.println(KmsTopologyGrapher
-				.createSvgTopologyGrapher(kmsManager));
+    System.out.println(KmsTopologyGrapher.createSvgTopologyGrapher(kmsManager));
 
-		aot.addTreeSink(null, treeId, "JJJ");
-		aot.addTreeSink(null, treeId, "FFF");
+    aot.addTreeSink(null, treeId, "JJJ");
+    aot.addTreeSink(null, treeId, "FFF");
 
-		System.out.println(KmsTopologyGrapher
-				.createSvgTopologyGrapher(kmsManager));
-	}
+    System.out.println(KmsTopologyGrapher.createSvgTopologyGrapher(kmsManager));
+  }
 }

@@ -34,26 +34,25 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @EnableAutoConfiguration
 public class TreeDemoApp implements WebSocketConfigurer {
 
-	final static String DEFAULT_KTS_WS_URI = "ws://localhost:8890/kurento-tree";
+  final static String DEFAULT_KTS_WS_URI = "ws://localhost:8890/kurento-tree";
 
-	@Bean(destroyMethod = "cleanup", initMethod = "init")
-	public TreeDemoHandler callHandler() {
-		return new TreeDemoHandler();
-	}
+  @Bean(destroyMethod = "cleanup", initMethod = "init")
+  public TreeDemoHandler callHandler() {
+    return new TreeDemoHandler();
+  }
 
-	@Bean
-	public KurentoTreeClient kurentoTreeClient() {
-		return new KurentoTreeClient(System.getProperty("kts.ws.uri",
-				DEFAULT_KTS_WS_URI));	
-	}
+  @Bean
+  public KurentoTreeClient kurentoTreeClient() {
+    return new KurentoTreeClient(System.getProperty("kts.ws.uri", DEFAULT_KTS_WS_URI));
+  }
 
-	@Override
-	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-		registry.addHandler(callHandler(), "/call");
-	}
+  @Override
+  public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+    registry.addHandler(callHandler(), "/call");
+  }
 
-	public static void main(String[] args) throws Exception {
-		new SpringApplication(TreeDemoApp.class).run(args);
-	}
+  public static void main(String[] args) throws Exception {
+    new SpringApplication(TreeDemoApp.class).run(args);
+  }
 
 }

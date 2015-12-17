@@ -4,6 +4,6 @@ import org.kurento.client.MediaElement;
 
 public interface RealElement {
 
-	public MediaElement getMediaElement();
+  public MediaElement getMediaElement();
 
 }

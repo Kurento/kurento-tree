@@ -10,24 +10,24 @@ import org.kurento.tree.server.kms.real.RealKms;
 
 public class RealElasticKmsManager extends KmsManager implements KmsRegistrar {
 
-	public List<Kms> kmss = new CopyOnWriteArrayList<>();
+  public List<Kms> kmss = new CopyOnWriteArrayList<>();
 
-	public RealElasticKmsManager(List<String> kmsWsUris) {
-		for (String kmsWsUri : kmsWsUris) {
-			addKms(kmsWsUri);
-		}
-	}
+  public RealElasticKmsManager(List<String> kmsWsUris) {
+    for (String kmsWsUri : kmsWsUris) {
+      addKms(kmsWsUri);
+    }
+  }
 
-	private void addKms(String kmsWsUri) {
-		this.kmss.add(new RealKms(KurentoClient.create(kmsWsUri)));
-	}
+  private void addKms(String kmsWsUri) {
+    this.kmss.add(new RealKms(KurentoClient.create(kmsWsUri)));
+  }
 
-	public List<Kms> getKmss() {
-		return kmss;
-	}
+  public List<Kms> getKmss() {
+    return kmss;
+  }
 
-	@Override
-	public void register(String kmsWsUri) {
-		addKms(kmsWsUri);
-	}
+  @Override
+  public void register(String kmsWsUri) {
+    addKms(kmsWsUri);
+  }
 }

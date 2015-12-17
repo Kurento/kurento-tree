@@ -23,8 +23,7 @@ import org.slf4j.LoggerFactory;
  * <ul>
  * <li>It allows only one tree</li>
  * <li>Creates WebRtcEndpoint for sinks (viewers) only in non-root kmss.</li>
- * <li>Fills KMSs lexicographically until reach the configured
- * maxViewersPerPipeline.</li>
+ * <li>Fills KMSs lexicographically until reach the configured maxViewersPerPipeline.</li>
  * <li>It doesn't consider new kmss after start.</li>
  * </ul>
  *
@@ -32,192 +31,179 @@ import org.slf4j.LoggerFactory;
  */
 public class LexicalFixedTM extends AbstractOneTreeTM {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(LexicalFixedTM.class);
+  private static final Logger log = LoggerFactory.getLogger(LexicalFixedTM.class);
 
-	private KmsManager kmsManager;
-	private int maxViewersPerPipeline = 2;
+  private KmsManager kmsManager;
+  private int maxViewersPerPipeline = 2;
 
-	private boolean oneKms = true;
+  private boolean oneKms = true;
 
-	private Pipeline rootPipeline;
-	private List<Plumber> rootPlumbers = new ArrayList<>();
-	private WebRtc sourceWebRtc;
+  private Pipeline rootPipeline;
+  private List<Plumber> rootPlumbers = new ArrayList<>();
+  private WebRtc sourceWebRtc;
 
-	private List<Pipeline> leafPipelines = new ArrayList<>();
-	private List<Plumber> leafPlumbers = new ArrayList<>();
-	private Map<String, WebRtc> sinks = new ConcurrentHashMap<>();
+  private List<Pipeline> leafPipelines = new ArrayList<>();
+  private List<Plumber> leafPlumbers = new ArrayList<>();
+  private Map<String, WebRtc> sinks = new ConcurrentHashMap<>();
 
-	public LexicalFixedTM(KmsManager kmsManager) {
-		this(kmsManager, 5);
-	}
+  public LexicalFixedTM(KmsManager kmsManager) {
+    this(kmsManager, 5);
+  }
 
-	public LexicalFixedTM(KmsManager kmsManager, int maxViewersPerPipeline) {
+  public LexicalFixedTM(KmsManager kmsManager, int maxViewersPerPipeline) {
 
-		this.maxViewersPerPipeline = maxViewersPerPipeline;
-		this.kmsManager = kmsManager;
+    this.maxViewersPerPipeline = maxViewersPerPipeline;
+    this.kmsManager = kmsManager;
 
-		if (kmsManager.getKmss().isEmpty()) {
-			log.error("LexicalFixedNoRootTM cannot be used without initial kmss");
+    if (kmsManager.getKmss().isEmpty()) {
+      log.error("LexicalFixedNoRootTM cannot be used without initial kmss");
 
-		} else if (kmsManager.getKmss().size() == 1) {
+    } else if (kmsManager.getKmss().size() == 1) {
 
-			oneKms = true;
+      oneKms = true;
 
-			rootPipeline = kmsManager.getKmss().get(0).createPipeline();
+      rootPipeline = kmsManager.getKmss().get(0).createPipeline();
 
-		} else {
+    } else {
 
-			oneKms = false;
+      oneKms = false;
 
-			for (Kms kms : kmsManager.getKmss()) {
-				Pipeline pipeline = kms.createPipeline();
-				if (rootPipeline == null) {
-					rootPipeline = pipeline;
-				} else {
-					leafPipelines.add(pipeline);
-					Plumber[] plumbers = rootPipeline.link(pipeline);
-					this.rootPlumbers.add(plumbers[0]);
-					this.leafPlumbers.add(plumbers[1]);
-				}
-			}
-		}
-	}
+      for (Kms kms : kmsManager.getKmss()) {
+        Pipeline pipeline = kms.createPipeline();
+        if (rootPipeline == null) {
+          rootPipeline = pipeline;
+        } else {
+          leafPipelines.add(pipeline);
+          Plumber[] plumbers = rootPipeline.link(pipeline);
+          this.rootPlumbers.add(plumbers[0]);
+          this.leafPlumbers.add(plumbers[1]);
+        }
+      }
+    }
+  }
 
-	@Override
-	public KmsManager getKmsManager() {
-		return kmsManager;
-	}
+  @Override
+  public KmsManager getKmsManager() {
+    return kmsManager;
+  }
 
-	@Override
-	public synchronized void releaseTree(String treeId) throws TreeException {
+  @Override
+  public synchronized void releaseTree(String treeId) throws TreeException {
 
-		checkTreeId(treeId);
+    checkTreeId(treeId);
 
-		createdTree = false;
-		sourceWebRtc.release();
-		sourceWebRtc = null;
+    createdTree = false;
+    sourceWebRtc.release();
+    sourceWebRtc = null;
 
-		for (WebRtc webRtc : sinks.values()) {
-			webRtc.release();
-		}
-	}
+    for (WebRtc webRtc : sinks.values()) {
+      webRtc.release();
+    }
+  }
 
-	@Override
-	public synchronized String setTreeSource(Session session, String treeId,
-			String offerSdp)
-					throws TreeException {
+  @Override
+  public synchronized String setTreeSource(Session session, String treeId, String offerSdp)
+      throws TreeException {
 
-		checkTreeId(treeId);
+    checkTreeId(treeId);
 
-		if (sourceWebRtc != null) {
-			removeTreeSource(treeId);
-		}
+    if (sourceWebRtc != null) {
+      removeTreeSource(treeId);
+    }
 
-		sourceWebRtc = rootPipeline.createWebRtc(new TreeElementSession(
-				session, treeId, null));
+    sourceWebRtc = rootPipeline.createWebRtc(new TreeElementSession(session, treeId, null));
 
-		if (!oneKms) {
-			for (Plumber plumber : this.rootPlumbers) {
-				sourceWebRtc.connect(plumber);
-			}
-		}
-		String sdpAnswer = sourceWebRtc.processSdpOffer(offerSdp);
-		sourceWebRtc.gatherCandidates();
-		return sdpAnswer;
-	}
+    if (!oneKms) {
+      for (Plumber plumber : this.rootPlumbers) {
+        sourceWebRtc.connect(plumber);
+      }
+    }
+    String sdpAnswer = sourceWebRtc.processSdpOffer(offerSdp);
+    sourceWebRtc.gatherCandidates();
+    return sdpAnswer;
+  }
 
-	@Override
-	public synchronized void removeTreeSource(String treeId)
-			throws TreeException {
+  @Override
+  public synchronized void removeTreeSource(String treeId) throws TreeException {
 
-		checkTreeId(treeId);
+    checkTreeId(treeId);
 
-		sourceWebRtc.release();
-		sourceWebRtc = null;
-	}
+    sourceWebRtc.release();
+    sourceWebRtc = null;
+  }
 
-	@Override
-	public synchronized TreeEndpoint addTreeSink(Session session,
-			String treeId, String sdpOffer)
-					throws TreeException {
+  @Override
+  public synchronized TreeEndpoint addTreeSink(Session session, String treeId, String sdpOffer)
+      throws TreeException {
 
-		checkTreeId(treeId);
+    checkTreeId(treeId);
 
-		TreeEndpoint result = null;
+    TreeEndpoint result = null;
 
-		if (oneKms) {
-			if (rootPipeline.getWebRtcs().size() < maxViewersPerPipeline) {
-				String id = "r_" + (rootPipeline.getWebRtcs().size() - 1);
-				WebRtc webRtc = rootPipeline
-						.createWebRtc(new TreeElementSession(session, treeId,
-								id));
-				sourceWebRtc.connect(webRtc);
-				String sdpAnswer = webRtc.processSdpOffer(sdpOffer);
-				webRtc.gatherCandidates();
-				result = new TreeEndpoint(sdpAnswer, id);
-			} else {
-				throw new TreeException("Max number of viewers reached");
-			}
-		} else {
-			int numPipeline = 0;
-			for (Pipeline pipeline : this.leafPipelines) {
-				if (pipeline.getWebRtcs().size() < maxViewersPerPipeline) {
-					String id = numPipeline + "_"
-							+ (pipeline.getWebRtcs().size() - 1);
-					WebRtc webRtc = pipeline
-							.createWebRtc(new TreeElementSession(session,
-									treeId, id));
-					pipeline.getPlumbers().get(0).connect(webRtc);
-					String sdpAnswer = webRtc.processSdpOffer(sdpOffer);
-					webRtc.gatherCandidates();
-					result = new TreeEndpoint(sdpAnswer, id);
-					break;
-				}
-				numPipeline++;
-			}
-		}
+    if (oneKms) {
+      if (rootPipeline.getWebRtcs().size() < maxViewersPerPipeline) {
+        String id = "r_" + (rootPipeline.getWebRtcs().size() - 1);
+        WebRtc webRtc = rootPipeline.createWebRtc(new TreeElementSession(session, treeId, id));
+        sourceWebRtc.connect(webRtc);
+        String sdpAnswer = webRtc.processSdpOffer(sdpOffer);
+        webRtc.gatherCandidates();
+        result = new TreeEndpoint(sdpAnswer, id);
+      } else {
+        throw new TreeException("Max number of viewers reached");
+      }
+    } else {
+      int numPipeline = 0;
+      for (Pipeline pipeline : this.leafPipelines) {
+        if (pipeline.getWebRtcs().size() < maxViewersPerPipeline) {
+          String id = numPipeline + "_" + (pipeline.getWebRtcs().size() - 1);
+          WebRtc webRtc = pipeline.createWebRtc(new TreeElementSession(session, treeId, id));
+          pipeline.getPlumbers().get(0).connect(webRtc);
+          String sdpAnswer = webRtc.processSdpOffer(sdpOffer);
+          webRtc.gatherCandidates();
+          result = new TreeEndpoint(sdpAnswer, id);
+          break;
+        }
+        numPipeline++;
+      }
+    }
 
-		if (result != null) {
-			return result;
-		} else {
-			throw new TreeException("Max number of viewers reached");
-		}
-	}
+    if (result != null) {
+      return result;
+    } else {
+      throw new TreeException("Max number of viewers reached");
+    }
+  }
 
-	@Override
-	public synchronized void removeTreeSink(String treeId, String sinkId)
-			throws TreeException {
-		checkTreeId(treeId);
-		getSink(sinkId).disconnect();
-	}
+  @Override
+  public synchronized void removeTreeSink(String treeId, String sinkId) throws TreeException {
+    checkTreeId(treeId);
+    getSink(sinkId).disconnect();
+  }
 
-	@Override
-	public void addSinkIceCandidate(String treeId, String sinkId,
-			IceCandidate iceCandidate) {
-		checkTreeId(treeId);
-		getSink(sinkId).addIceCandidate(iceCandidate);
-	}
+  @Override
+  public void addSinkIceCandidate(String treeId, String sinkId, IceCandidate iceCandidate) {
+    checkTreeId(treeId);
+    getSink(sinkId).addIceCandidate(iceCandidate);
+  }
 
-	@Override
-	public void addTreeIceCandidate(String treeId, IceCandidate iceCandidate) {
-		checkTreeId(treeId);
-		if (sourceWebRtc != null)
-			sourceWebRtc.addIceCandidate(iceCandidate);
-	}
+  @Override
+  public void addTreeIceCandidate(String treeId, IceCandidate iceCandidate) {
+    checkTreeId(treeId);
+    if (sourceWebRtc != null)
+      sourceWebRtc.addIceCandidate(iceCandidate);
+  }
 
-	private WebRtc getSink(String sinkId) {
-		WebRtc sink;
-		String[] sinkIdTokens = sinkId.split("_");
-		if (sinkIdTokens[0].equals("r")) {
-			int numWebRtc = Integer.parseInt(sinkIdTokens[1]);
-			sink = this.rootPipeline.getWebRtcs().get(numWebRtc);
-		} else {
-			int numPipeline = Integer.parseInt(sinkIdTokens[0]);
-			int numWebRtc = Integer.parseInt(sinkIdTokens[1]);
-			sink = this.leafPipelines.get(numPipeline).getWebRtcs()
-					.get(numWebRtc);
-		}
-		return sink;
-	}
+  private WebRtc getSink(String sinkId) {
+    WebRtc sink;
+    String[] sinkIdTokens = sinkId.split("_");
+    if (sinkIdTokens[0].equals("r")) {
+      int numWebRtc = Integer.parseInt(sinkIdTokens[1]);
+      sink = this.rootPipeline.getWebRtcs().get(numWebRtc);
+    } else {
+      int numPipeline = Integer.parseInt(sinkIdTokens[0]);
+      int numWebRtc = Integer.parseInt(sinkIdTokens[1]);
+      sink = this.leafPipelines.get(numPipeline).getWebRtcs().get(numWebRtc);
+    }
+    return sink;
+  }
 }

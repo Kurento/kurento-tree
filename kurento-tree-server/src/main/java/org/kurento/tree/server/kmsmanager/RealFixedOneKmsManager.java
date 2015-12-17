@@ -10,18 +10,17 @@ import org.kurento.tree.server.kms.real.RealKms;
 
 public class RealFixedOneKmsManager extends KmsManager {
 
-	public List<Kms> kmss = new ArrayList<>();
+  public List<Kms> kmss = new ArrayList<>();
 
-	public RealFixedOneKmsManager(String kmsWsUri, int numKmss)
-			throws IOException {
-		for (int i = 0; i < numKmss; i++) {
-			KurentoClient client = KurentoClient.create(kmsWsUri);
-			this.kmss.add(new RealKms(client));
-		}
-	}
+  public RealFixedOneKmsManager(String kmsWsUri, int numKmss) throws IOException {
+    for (int i = 0; i < numKmss; i++) {
+      KurentoClient client = KurentoClient.create(kmsWsUri);
+      this.kmss.add(new RealKms(client));
+    }
+  }
 
-	public List<Kms> getKmss() {
-		return kmss;
-	}
+  public List<Kms> getKmss() {
+    return kmss;
+  }
 
 }

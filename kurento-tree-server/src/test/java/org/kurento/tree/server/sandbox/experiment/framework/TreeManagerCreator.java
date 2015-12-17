@@ -5,5 +5,5 @@ import org.kurento.tree.server.treemanager.TreeManager;
 
 public interface TreeManagerCreator {
 
-	public TreeManager createTreeManager(KmsManager kmsManager);
+  public TreeManager createTreeManager(KmsManager kmsManager);
 }

@@ -10,110 +10,109 @@ import com.google.common.collect.Iterables;
 
 public class Pipeline extends KurentoObj {
 
-	protected Kms kms;
-	protected List<WebRtc> webRtcs = new ArrayList<>();
-	protected List<Plumber> plumbers = new ArrayList<>();
+  protected Kms kms;
+  protected List<WebRtc> webRtcs = new ArrayList<>();
+  protected List<Plumber> plumbers = new ArrayList<>();
 
-	public Pipeline(Kms kms) {
-		this.kms = kms;
-	}
+  public Pipeline(Kms kms) {
+    this.kms = kms;
+  }
 
-	public Kms getKms() {
-		return kms;
-	}
+  public Kms getKms() {
+    return kms;
+  }
 
-	public WebRtc createWebRtc(TreeElementSession session) {
+  public WebRtc createWebRtc(TreeElementSession session) {
 
-		checkReleased();
+    checkReleased();
 
-		WebRtc webRtc = newWebRtc(session);
-		webRtcs.add(webRtc);
-		return webRtc;
-	}
+    WebRtc webRtc = newWebRtc(session);
+    webRtcs.add(webRtc);
+    return webRtc;
+  }
 
-	public Plumber createPlumber() {
+  public Plumber createPlumber() {
 
-		checkReleased();
+    checkReleased();
 
-		Plumber plumber = newPlumber();
-		plumbers.add(plumber);
-		return plumber;
-	}
+    Plumber plumber = newPlumber();
+    plumbers.add(plumber);
+    return plumber;
+  }
 
-	public List<WebRtc> getWebRtcs() {
+  public List<WebRtc> getWebRtcs() {
 
-		checkReleased();
+    checkReleased();
 
-		return webRtcs;
-	}
+    return webRtcs;
+  }
 
-	public List<Plumber> getPlumbers() {
+  public List<Plumber> getPlumbers() {
 
-		checkReleased();
+    checkReleased();
 
-		return plumbers;
-	}
+    return plumbers;
+  }
 
-	public Iterable<Element> getElements() {
+  public Iterable<Element> getElements() {
 
-		checkReleased();
+    checkReleased();
 
-		return Iterables.concat(webRtcs, plumbers);
-	}
+    return Iterables.concat(webRtcs, plumbers);
+  }
 
-	public Plumber[] link(Pipeline sinkPipeline) {
+  public Plumber[] link(Pipeline sinkPipeline) {
 
-		checkReleased();
+    checkReleased();
 
-		Plumber sourcePipelinePlumber = this.createPlumber();
-		Plumber sinkPipelinePlumber = sinkPipeline.createPlumber();
+    Plumber sourcePipelinePlumber = this.createPlumber();
+    Plumber sinkPipelinePlumber = sinkPipeline.createPlumber();
 
-		sourcePipelinePlumber.link(sinkPipelinePlumber);
+    sourcePipelinePlumber.link(sinkPipelinePlumber);
 
-		return new Plumber[] { sourcePipelinePlumber, sinkPipelinePlumber };
-	}
+    return new Plumber[] { sourcePipelinePlumber, sinkPipelinePlumber };
+  }
 
-	protected WebRtc newWebRtc(TreeElementSession session) {
+  protected WebRtc newWebRtc(TreeElementSession session) {
 
-		checkReleased();
+    checkReleased();
 
-		return new WebRtc(this);
-	}
+    return new WebRtc(this);
+  }
 
-	protected Plumber newPlumber() {
+  protected Plumber newPlumber() {
 
-		checkReleased();
+    checkReleased();
 
-		return new Plumber(this);
-	}
+    return new Plumber(this);
+  }
 
-	void removeElement(Element element) {
+  void removeElement(Element element) {
 
-		checkReleased();
+    checkReleased();
 
-		this.webRtcs.remove(element);
-		this.plumbers.remove(element);
-	}
+    this.webRtcs.remove(element);
+    this.plumbers.remove(element);
+  }
 
-	@Override
-	public String toString() {
-		return "[webRtcs=" + webRtcs.size() + ", plumbers=" + plumbers.size()
-				+ "]";
-	}
+  @Override
+  public String toString() {
+    return "[webRtcs=" + webRtcs.size() + ", plumbers=" + plumbers.size() + "]";
+  }
 
-	@Override
-	public void release() {
+  @Override
+  public void release() {
 
-		Iterator<Element> it = getElements().iterator();
-		while (it.hasNext()) {
-			Element element = it.next();
-			it.remove();
-			element.release();
-		}
+    Iterator<Element> it = getElements().iterator();
+    while (it.hasNext()) {
+      Element element = it.next();
+      it.remove();
+      element.release();
+    }
 
-		this.getKms().removePipeline(this);
+    this.getKms().removePipeline(this);
 
-		super.release();
-	}
+    super.release();
+  }
 
 }

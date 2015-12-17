@@ -6,18 +6,18 @@ import org.kurento.tree.server.kms.Pipeline;
 
 public class RealKms extends Kms {
 
-	private KurentoClient client;
+  private KurentoClient client;
 
-	public RealKms(KurentoClient client) {
-		this.client = client;
-	}
+  public RealKms(KurentoClient client) {
+    this.client = client;
+  }
 
-	protected Pipeline newPipeline() {
-		return new RealPipeline(this);
-	}
+  protected Pipeline newPipeline() {
+    return new RealPipeline(this);
+  }
 
-	public KurentoClient getKurentoClient() {
-		return client;
-	}
+  public KurentoClient getKurentoClient() {
+    return client;
+  }
 
 }

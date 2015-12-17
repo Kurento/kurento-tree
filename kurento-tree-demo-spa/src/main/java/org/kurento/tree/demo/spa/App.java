@@ -24,7 +24,7 @@ import org.kurento.tree.server.app.KurentoTreeServerApp;
  */
 public class App {
 
-	public static void main(String[] args) throws Exception {
-		KurentoTreeServerApp.start();
-	}
+  public static void main(String[] args) throws Exception {
+    KurentoTreeServerApp.start();
+  }
 }
