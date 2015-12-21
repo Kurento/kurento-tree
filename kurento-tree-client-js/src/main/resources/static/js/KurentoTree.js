@@ -202,6 +202,7 @@ function KurentoTree(wsUri) {
 			sendCloseMessage : true,
 			ws : {
 				uri : wsUri,
+				useSockJS : true,
 				onconnected : connectCallback,
 				ondisconnect : disconnectCallback,
 				onreconnecting : disconnectCallback,
@@ -214,7 +215,7 @@ function KurentoTree(wsUri) {
 			}
 		};
 
-		jsonrpcClient = new JsonRpcClient(config);
+		jsonrpcClient = new RpcBuilder.clients.JsonRpcClient(config);
 	}
 
 	function connectCallback() {
