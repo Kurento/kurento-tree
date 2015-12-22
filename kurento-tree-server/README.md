@@ -5,8 +5,8 @@ Copyright © 2015-2016 [Kurento]. Licensed under [LGPL v2.1 License].
 kurento-tree-server
 ======================
 
-The kurento-tree-server is a service for creation WebRTC broadcasting
-trees (one to many). It exports a JsonRPC API based on WebSockets.
+kurento-tree-server allows creation of WebRTC broadcasting
+trees (one to many). It exports a WebSockets based JsonRPC API.
 
 What is Kurento
 ---------------
