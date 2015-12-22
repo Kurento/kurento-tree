@@ -2,7 +2,7 @@
 
 Copyright © 2015-2016 [Kurento]. Licensed under [LGPL v2.1 License].
 
-kurento-tree
+kurento-tree-client
 ======================
 
 The kurento-tree-client project contains the client for the kurento-tree-server,
