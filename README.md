@@ -5,9 +5,7 @@ Copyright © 2015-2016 [Kurento]. Licensed under [LGPL v2.1 License].
 kurento-tree
 ==========
 
-Kurento Tree is composed by several modules to offer a broadcasting using
-WebRTC. The modules are: kurento-tree-server, kurento-tree-client and
-kurento-tree-demo.
+Kurento Tree implements a broadcasting service using WebRTC technology.
 
 What is Kurento
 ---------------
