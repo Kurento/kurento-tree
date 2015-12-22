@@ -4,7 +4,7 @@ Copyright © 2015-2016 [Kurento]. Licensed under [LGPL v2.1 License].
 
 kurento-tree-demo
 =================
-Kurento Tree Demo: Broadcasting one to many with WebRTC using Kurento Tree.
+WebRTC broadcasting application implementing model one to many that uses Kurento Tree.
 
 What is Kurento
 ---------------
