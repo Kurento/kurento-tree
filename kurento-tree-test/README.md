@@ -1,6 +1,6 @@
-[![][KurentoImage]][website]
+[![][KurentoImage]][Kurento]
 
-Copyright © 2015 Kurento. Licensed under [LGPL License].
+Copyright © 2015-2016 [Kurento]. Licensed under [LGPL v2.1 License].
 
 kurento-tree-test
 =================
