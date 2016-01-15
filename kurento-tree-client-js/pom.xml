@@ -10,7 +10,7 @@
 	<artifactId>kurento-tree-client-js</artifactId>
 	<packaging>jar</packaging>
 
-	<name>Kurento Tree Client</name>
+	<name>Kurento Tree Client Javascript</name>
 	<description>
 		Kurento JavaScript Client for Kurento Tree
 	</description>

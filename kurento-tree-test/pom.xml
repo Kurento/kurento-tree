@@ -69,8 +69,6 @@
 		<dependency>
 			<groupId>org.kurento</groupId>
 			<artifactId>kurento-test</artifactId>
-			<!-- FIXME delete this version when project is upgraded -->
-			<version>6.2.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 

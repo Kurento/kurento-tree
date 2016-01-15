@@ -44,7 +44,6 @@
 	</developers>
 
 	<properties>
-		<demo.port>8083</demo.port>
 		<!-- Main class -->
 		<start-class>org.kurento.tree.demo.TreeDemoApp</start-class>
 	</properties>

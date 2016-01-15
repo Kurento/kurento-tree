@@ -10,7 +10,7 @@
 	<artifactId>kurento-tree-demo-spa</artifactId>
 	<packaging>jar</packaging>
 
-	<name>Kurento Tree Demo</name>
+	<name>Kurento Tree Demo SPA</name>
 	<description>Kurento Tree Demo SPA</description>
 	<url>http://www.kurento.org/docs/${project.version}</url>
 
@@ -154,12 +154,10 @@
 		<dependency>
 			<groupId>org.kurento</groupId>
 			<artifactId>kurento-tree-client-js</artifactId>
-			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.kurento</groupId>
 			<artifactId>kurento-tree-server</artifactId>
-			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 
