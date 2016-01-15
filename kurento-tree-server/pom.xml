@@ -121,11 +121,6 @@
 			<artifactId>kurento-tree-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.kurento.module</groupId>
-			<artifactId>plumberendpoint</artifactId>
-			<version>6.1.0</version>
-		</dependency>
-		<dependency>
 			<groupId>org.kurento</groupId>
 			<artifactId>kurento-client</artifactId>
 		</dependency>
