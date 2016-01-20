@@ -44,7 +44,6 @@
 	</developers>
 
 	<properties>
-		<demo.port>8080</demo.port>
 		<start-class>org.kurento.tree.demo.spa.App</start-class>
 	</properties>
 
@@ -75,7 +74,8 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
-					<mainClass>org.kurento.tree.demo.spa.App</mainClass>
+					<mainClass>${start-class}</mainClass>
+					<executable>true</executable>
 				</configuration>
 				<executions>
 					<execution>

@@ -13,7 +13,7 @@
  *
  */
 
-var tree = new KurentoTree('http://' + location.host + '/kurento-tree');
+var tree = new KurentoTree('https://' + location.host + '/kurento-tree');
 var video;
 var active = false;
 var name = 'master';

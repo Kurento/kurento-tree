@@ -12,13 +12,13 @@
  * Lesser General Public License for more details.
  *
  */
+
 package org.kurento.tree.demo;
 
 import org.kurento.tree.client.KurentoTreeClient;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
@@ -29,9 +29,8 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
  * @author Boni Garcia (bgarcia@gsyc.es)
  * @since 5.0.0
  */
-@Configuration
 @EnableWebSocket
-@EnableAutoConfiguration
+@SpringBootApplication
 public class TreeDemoApp implements WebSocketConfigurer {
 
   final static String DEFAULT_KTS_WS_URI = "ws://localhost:8890/kurento-tree";
