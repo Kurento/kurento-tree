@@ -2,7 +2,7 @@
 Description=${project.description}
 
 [Service]
-User=nobody
+User=kurento
 ExecStart=/var/lib/kurento/${project.artifactId}.jar run
 
 [Install]

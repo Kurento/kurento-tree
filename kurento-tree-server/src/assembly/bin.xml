@@ -26,6 +26,11 @@
 			<destName>support-files/keystore.jks</destName>
 			<filtered>false</filtered>
 		</file>
+		<file>
+			<source>README.md</source>
+			<outputDirectory></outputDirectory>
+			<filtered>false</filtered>
+		</file>
 	</files>
 
 	<fileSets>

@@ -6,6 +6,35 @@ kurento-tree-demo
 =================
 WebRTC broadcasting application implementing model one to many that uses Kurento Tree.
 
+Installation instructions
+-------------------------
+The project is packaged in a compressed zip file. In order to have the
+application running as a service, you can follow the following steps
+* Unzip the bundled application
+* Move into the _bin_ folder, and execute the script `install.sh` as root
+```
+sudo ./install.sh
+```
+This will copy all the necessary files in the appropriate places
+* /var/lib/kurento/
+** kurento-tree-demo.jar: the application itself.
+** kurento-tree-demo.conf: configuration file of the service. Things like
+the options for the JVM go here.
+** keystore.jks: File containing the certificate to enable secure protocols.
+* /etc/init.d/kurento-tree-demo: startup script.
+* /etc/kurento/kurento-tree-demo.conf.json: configuration file of the application.
+	
+The installation script starts the service right after the files are copied. Once
+installed, it can be managed as a regular service using _init.d_ 
+
+```
+sudo service kurento-tree-demo {start|stop|restart|status|run}
+```
+or _sysctl_ if it is installed
+```
+sudo systemctl {start|stop|restart|status|run} kurento-tree-demo
+```
+
 What is Kurento
 ---------------
 
