@@ -47,6 +47,8 @@
 	</developers>
 
 	<properties>
+		<version.kurento-tree>6.2.1-SNAPSHOT</version.kurento-tree>
+
 		<kurento-tree.scm.url>https://code.kurento.org/kurento-tree</kurento-tree.scm.url>
 		<kurento-tree.scm.connection>ssh://${user.name}@code.kurento.org:12345/kurento-tree</kurento-tree.scm.connection>
 
@@ -69,32 +71,32 @@
 			<dependency>
 				<groupId>org.kurento</groupId>
 				<artifactId>kurento-tree-server</artifactId>
-				<version>${project.version}</version>
+				<version>${version.kurento-tree}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.kurento</groupId>
 				<artifactId>kurento-tree-client</artifactId>
-				<version>${project.version}</version>
+				<version>${version.kurento-tree}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.kurento</groupId>
 				<artifactId>kurento-tree-client-js</artifactId>
-				<version>${project.version}</version>
+				<version>${version.kurento-tree}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.kurento</groupId>
 				<artifactId>kurento-tree-test</artifactId>
-				<version>${project.version}</version>
+				<version>${version.kurento-tree}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.kurento</groupId>
 				<artifactId>kurento-tree-demo</artifactId>
-				<version>${project.version}</version>
+				<version>${version.kurento-tree}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.kurento</groupId>
 				<artifactId>kurento-tree-demo-spa</artifactId>
-				<version>${project.version}</version>
+				<version>${version.kurento-tree}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
