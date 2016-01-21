@@ -1,17 +1,14 @@
+
 package org.kurento.tree.server.test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.kurento.commons.PropertiesManager.getPropertyJson;
-
-import java.util.List;
+import static org.kurento.commons.PropertiesManager.getProperty;
+import static org.kurento.tree.server.app.KurentoTreeServerApp.KMS_URI_PROPERTY;
 
 import org.junit.Test;
 import org.kurento.commons.ConfigFileManager;
 import org.kurento.commons.PropertiesManager;
-import org.kurento.jsonrpc.JsonUtils;
-
-import com.google.gson.JsonArray;
 
 public class TreeApiConfigFileLoaderTest {
 
@@ -23,10 +20,9 @@ public class TreeApiConfigFileLoaderTest {
     assertThat(PropertiesManager.getProperty("ws.port"), is("8890"));
     assertThat(PropertiesManager.getProperty("ws.path"), is("kurento-tree"));
 
-    JsonArray kmsUrisJson = getPropertyJson("kms.uris", null, JsonArray.class);
-    List<String> kmsUris = JsonUtils.toStringList(kmsUrisJson);
+    String kmsUri = getProperty(KMS_URI_PROPERTY, "something-else");
 
-    assertThat(kmsUris.get(0), is("ws://192.168.0.1:8888/kurento"));
+    assertThat(kmsUri, is("ws://192.168.0.1:8888/kurento"));
 
   }
 

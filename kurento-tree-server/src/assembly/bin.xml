@@ -14,12 +14,29 @@
 			<outputDirectory>lib</outputDirectory>
 			<destName>${project.artifactId}.jar</destName>
 		</file>
+		<file>
+			<source>package/config/application.conf</source>
+			<outputDirectory></outputDirectory>
+			<destName>config/${project.artifactId}.conf</destName>
+			<filtered>true</filtered>
+		</file>
+		<file>
+			<source>package/support-files/keystore.jks</source>
+			<outputDirectory></outputDirectory>
+			<destName>support-files/keystore.jks</destName>
+			<filtered>false</filtered>
+		</file>
 	</files>
 
 	<fileSets>
 		<fileSet>
 			<directory>package</directory>
 			<outputDirectory></outputDirectory>
+			<excludes>
+				<exclude>config/application.conf</exclude>
+				<exclude>support-files/keystore.jks</exclude>
+			</excludes>
+			<filtered>true</filtered>
 		</fileSet>
 	</fileSets>
 </assembly>

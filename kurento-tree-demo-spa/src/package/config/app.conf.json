@@ -4,6 +4,6 @@
      "path": "kurento-tree"
    },
    "kms": {
-      "url": "ws://192.168.0.1:8888/kurento"
+      "url": "ws://127.0.0.1:8888/kurento"
    }
 }

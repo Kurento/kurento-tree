@@ -45,11 +45,10 @@ public class KurentoTreeServerApp implements JsonRpcConfigurer {
   public static final String WEBSOCKET_PATH_PROPERTY = "ws.path";
   public static final String WEBSOCKET_PATH_DEFAULT = "kurento-tree";
 
-  public static final String KMSS_URIS_PROPERTY = "kms.url";
-  public static final String KMSS_URIS_DEFAULT = "ws://localhost:8888/kurento";
+  public static final String KMS_URI_PROPERTY = "kms.url";
+  public static final String KMS_URI_DEFAULT = "ws://localhost:8888/kurento";
 
   public static final String KMS_MODE_PROPERTY = "kms.mode";
-  public static final String KMS_MODE_DEFAULT = "registrar";
 
   private KmsMode kmsMode = getProperty(KMS_MODE_PROPERTY, KmsMode.NUBOMEDIA);
 
@@ -73,7 +72,7 @@ public class KurentoTreeServerApp implements JsonRpcConfigurer {
   }
 
   private String loadKmsUrl() {
-    String kmsUrl = getProperty(KMSS_URIS_PROPERTY, KMSS_URIS_DEFAULT);
+    String kmsUrl = getProperty(KMS_URI_PROPERTY, KMS_URI_DEFAULT);
 
     log.info("Configuring Kurento Tree Server to use kms: " + kmsUrl);
 
