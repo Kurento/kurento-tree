@@ -12,10 +12,12 @@
  * Lesser General Public License for more details.
  *
  */
+
 package org.kurento.test.base;
 
 import java.io.IOException;
 
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.kurento.client.KurentoClient;
@@ -28,49 +30,53 @@ import org.kurento.tree.server.app.KurentoTreeServerApp;
 
 /**
  * Base for kurento-tree tests.
- * 
+ *
  * @author Boni Garcia (bgarcia@gsyc.es)
  * @since 6.1.1
  */
 public class KurentoTreeTestBase extends BrowserTest<TreeTestPage> {
 
-	public final static String KTS_WS_URI_PROP = "kts.ws.uri";
-	public final static String KTS_WS_URI_DEFAULT = "ws://localhost:7779/kurento-tree";
+  public final static String KTS_WS_URI_PROP = "kts.ws.uri";
+  public final static String KTS_WS_URI_DEFAULT =
+      "wss://localhost:" + WebServerService.getAppHttpPort() + "/kurento-tree";
 
-	public static @Service(1) KmsService kms = new KmsService();
-	public static @Service(2) KmsService fakeKms = new FakeKmsService();
-	public static @Service(3) WebServerService webServer = new WebServerService(
-			KurentoTreeServerApp.class);
+  public static @Service(1) KmsService kms = new KmsService();
+  public static @Service(2) KmsService fakeKms = new FakeKmsService();
+  public static @Service(3) WebServerService webServer =
+      new WebServerService(KurentoTreeServerApp.class);
 
-	protected static KurentoTreeClient kurentoTreeClient;
+  protected static KurentoTreeClient kurentoTreeClient;
 
-	private KurentoClient fakeKurentoClient;
+  private KurentoClient fakeKurentoClient;
 
-	@BeforeClass
-	public static void setupTreeClient() throws IOException {
-		kurentoTreeClient = new KurentoTreeClient(
-				System.getProperty(KTS_WS_URI_PROP, KTS_WS_URI_DEFAULT));
-	}
+  @BeforeClass
+  public static void setupTreeClient() throws IOException {
 
-	@AfterClass
-	public static void teardownTreeClient() throws Exception {
-		if (kurentoTreeClient != null) {
-			kurentoTreeClient.close();
-		}
-	}
+    SslContextFactory ctxFactory = new SslContextFactory(true);
+    ctxFactory.setValidateCerts(true);
+    kurentoTreeClient =
+        new KurentoTreeClient(System.getProperty(KTS_WS_URI_PROP, KTS_WS_URI_DEFAULT), ctxFactory);
+  }
 
-	protected synchronized KurentoClient fakeKurentoClient() {
+  @AfterClass
+  public static void teardownTreeClient() throws Exception {
+    if (kurentoTreeClient != null) {
+      kurentoTreeClient.close();
+    }
+  }
 
-		if (fakeKurentoClient == null) {
+  protected synchronized KurentoClient fakeKurentoClient() {
 
-			if (fakeKms.isKmsStarted()) {
-				fakeKurentoClient = fakeKms.getKurentoClient();
-			} else {
-				fakeKurentoClient = kms.getKurentoClient();
-			}
-		}
+    if (fakeKurentoClient == null) {
 
-		return fakeKurentoClient;
-	}
+      if (fakeKms.isKmsStarted()) {
+        fakeKurentoClient = fakeKms.getKurentoClient();
+      } else {
+        fakeKurentoClient = kms.getKurentoClient();
+      }
+    }
+
+    return fakeKurentoClient;
+  }
 
 }

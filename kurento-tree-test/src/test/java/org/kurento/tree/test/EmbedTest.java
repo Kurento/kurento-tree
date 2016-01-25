@@ -1,3 +1,4 @@
+
 package org.kurento.tree.test;
 
 import java.io.IOException;
@@ -10,17 +11,17 @@ import org.kurento.tree.client.KurentoTreeClient;
 import org.kurento.tree.server.embed.KurentoTreeClientEmbed;
 
 public class EmbedTest extends KurentoTest {
-	
-	@Service
-	private KmsService kms = new KmsService();
 
-	@Test
-	public void test() throws IOException {
-		
-		KurentoTreeClient client = KurentoTreeClientEmbed.create(6666);
-		
-		client.createTree("XXXXX");
-		
-		client.close();
-	}
+  @Service
+  public KmsService kms = new KmsService();
+
+  @Test
+  public void test() throws IOException {
+
+    KurentoTreeClient client = KurentoTreeClientEmbed.create(6666);
+
+    client.createTree("XXXXX");
+
+    client.close();
+  }
 }

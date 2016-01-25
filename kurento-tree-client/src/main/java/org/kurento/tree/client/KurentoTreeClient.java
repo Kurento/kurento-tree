@@ -1,3 +1,4 @@
+
 package org.kurento.tree.client;
 
 import static org.kurento.tree.client.internal.ProtocolElements.ADD_ICE_CANDIDATE_METHOD;
@@ -17,6 +18,7 @@ import static org.kurento.tree.client.internal.ProtocolElements.TREE_ID;
 
 import java.io.IOException;
 
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.kurento.client.IceCandidate;
 import org.kurento.jsonrpc.JsonRpcErrorException;
 import org.kurento.jsonrpc.JsonUtils;
@@ -34,6 +36,10 @@ public class KurentoTreeClient {
 
   public KurentoTreeClient(String wsUri) {
     this(new JsonRpcClientWebSocket(wsUri + "/websocket"));
+  }
+
+  public KurentoTreeClient(String wsUri, SslContextFactory sslContextFactory) {
+    this(new JsonRpcClientWebSocket(wsUri + "/websocket", sslContextFactory));
   }
 
   public KurentoTreeClient(JsonRpcClient client) {
@@ -142,7 +148,7 @@ public class KurentoTreeClient {
    * Polls the candidates list maintained by this client to obtain a candidate gathered on the
    * server side. This method blocks until there is a candidate to return. This is a one-time
    * operation for the returned element.
-   * 
+   *
    * @return the gathered candidate, null when interrupted while waiting
    */
   public IceCandidateInfo getServerCandidate() {
@@ -151,7 +157,7 @@ public class KurentoTreeClient {
 
   /**
    * Notifies the server of a gathered ICE candidate on the client side.
-   * 
+   *
    * @param treeId
    *          the tree identifier
    * @param sinkId
@@ -165,8 +171,9 @@ public class KurentoTreeClient {
       throws TreeException, IOException {
     JsonObject params = new JsonObject();
     params.addProperty(TREE_ID, treeId);
-    if (sinkId != null && !sinkId.isEmpty())
+    if (sinkId != null && !sinkId.isEmpty()) {
       params.addProperty(SINK_ID, sinkId);
+    }
     params.addProperty(ICE_CANDIDATE, candidate.getCandidate());
     params.addProperty(ICE_SDP_M_LINE_INDEX, candidate.getSdpMLineIndex());
     params.addProperty(ICE_SDP_MID, candidate.getSdpMid());
