@@ -52,10 +52,8 @@ public class KurentoTreeTestBase extends BrowserTest<TreeTestPage> {
   @BeforeClass
   public static void setupTreeClient() throws IOException {
 
-    SslContextFactory ctxFactory = new SslContextFactory(true);
-    ctxFactory.setValidateCerts(true);
-    kurentoTreeClient =
-        new KurentoTreeClient(System.getProperty(KTS_WS_URI_PROP, KTS_WS_URI_DEFAULT), ctxFactory);
+    kurentoTreeClient = new KurentoTreeClient(
+        System.getProperty(KTS_WS_URI_PROP, KTS_WS_URI_DEFAULT), new SslContextFactory(true));
   }
 
   @AfterClass

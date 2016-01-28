@@ -15,6 +15,7 @@
 
 package org.kurento.tree.demo;
 
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.kurento.tree.client.KurentoTreeClient;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -42,7 +43,8 @@ public class TreeDemoApp implements WebSocketConfigurer {
 
   @Bean
   public KurentoTreeClient kurentoTreeClient() {
-    return new KurentoTreeClient(System.getProperty("kts.ws.uri", DEFAULT_KTS_WS_URI));
+    return new KurentoTreeClient(System.getProperty("kts.ws.uri", DEFAULT_KTS_WS_URI),
+        new SslContextFactory(true));
   }
 
   @Override

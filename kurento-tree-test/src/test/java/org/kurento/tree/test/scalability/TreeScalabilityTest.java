@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
@@ -134,8 +135,8 @@ public class TreeScalabilityTest extends KurentoTreeTestBase {
 
       // Creating tree
       kurentoTreeClient.createTree(treeId);
-      kurentoTreeClientSink =
-          new KurentoTreeClient(System.getProperty(KTS_WS_URI_PROP, KTS_WS_URI_DEFAULT));
+      kurentoTreeClientSink = new KurentoTreeClient(
+          System.getProperty(KTS_WS_URI_PROP, KTS_WS_URI_DEFAULT), new SslContextFactory(true));
 
       // Starting tree source
       getPage(0).setTreeSource(kurentoTreeClient, treeId, WebRtcChannel.AUDIO_AND_VIDEO,
