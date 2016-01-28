@@ -55,17 +55,7 @@
 
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
-
 	</properties>
-
-	<modules>
-		<module>kurento-tree-client</module>
-		<module>kurento-tree-client-js</module>
-		<module>kurento-tree-server</module>
-		<module>kurento-tree-demo</module>
-		<module>kurento-tree-demo-spa</module>
-		<module>kurento-tree-test</module>
-	</modules>
 
 	<dependencyManagement>
 		<dependencies>
@@ -101,5 +91,75 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
+
+	<profiles>
+		<profile>
+			<id>integration</id>
+			<modules>
+				<module>kurento-tree-client</module>
+				<module>kurento-tree-client-js</module>
+				<module>kurento-tree-server</module>
+				<module>kurento-tree-test</module>
+			</modules>
+		</profile>
+		<profile>
+			<id>default</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<modules>
+				<module>kurento-tree-client</module>
+				<module>kurento-tree-client-js</module>
+				<module>kurento-tree-server</module>
+				<module>kurento-tree-demo</module>
+				<module>kurento-tree-demo-spa</module>
+				<module>kurento-tree-test</module>
+			</modules>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<skipTests>false</skipTests>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-failsafe-plugin</artifactId>
+						<configuration>
+							<skipTests>false</skipTests>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>deploy</id>
+			<modules>
+				<module>kurento-tree-client</module>
+				<module>kurento-tree-client-js</module>
+				<module>kurento-tree-server</module>
+			</modules>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<skipTests>true</skipTests>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-failsafe-plugin</artifactId>
+						<configuration>
+							<skipTests>true</skipTests>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 </project>
