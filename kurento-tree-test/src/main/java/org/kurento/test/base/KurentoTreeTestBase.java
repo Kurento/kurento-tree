@@ -34,7 +34,7 @@ import org.kurento.tree.server.app.KurentoTreeServerApp;
  * @author Boni Garcia (bgarcia@gsyc.es)
  * @since 6.1.1
  */
-public class KurentoTreeTestBase extends BrowserTest<TreeTestPage> {
+public abstract class KurentoTreeTestBase extends BrowserTest<TreeTestPage> {
 
   public final static String KTS_WS_URI_PROP = "kts.ws.uri";
   public final static String KTS_WS_URI_DEFAULT =
