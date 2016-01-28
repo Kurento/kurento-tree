@@ -16,6 +16,10 @@
 package org.kurento.tree.test.scalability;
 
 import static org.kurento.commons.PropertiesManager.getProperty;
+import static org.kurento.test.browser.BrowserType.CHROME;
+import static org.kurento.test.browser.WebPageType.WEBRTC;
+import static org.kurento.test.config.BrowserConfig.BROWSER;
+import static org.kurento.test.config.BrowserScope.LOCAL;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -34,15 +38,10 @@ import org.kurento.client.EventListener;
 import org.kurento.client.MediaPipeline;
 import org.kurento.client.OnIceCandidateEvent;
 import org.kurento.client.WebRtcEndpoint;
-import org.kurento.test.base.KurentoTest;
 import org.kurento.test.base.KurentoTreeTestBase;
 import org.kurento.test.browser.Browser;
-import org.kurento.test.browser.BrowserType;
-import org.kurento.test.browser.WebPageType;
 import org.kurento.test.browser.WebRtcChannel;
 import org.kurento.test.browser.WebRtcMode;
-import org.kurento.test.config.BrowserConfig;
-import org.kurento.test.config.BrowserScope;
 import org.kurento.test.config.TestScenario;
 import org.kurento.test.latency.ChartWriter;
 import org.kurento.test.latency.LatencyController;
@@ -82,12 +81,12 @@ public class TreeScalabilityTest extends KurentoTreeTestBase {
 
   @Parameters(name = "{index}: {0}")
   public static Collection<Object[]> data() {
-    String videoPath = KurentoTest.getTestFilesHttpPath() + "/video/15sec/rgbHD.y4m";
+    String videoPath = getTestFilesDiskPath() + "/video/15sec/rgbHD.y4m";
     TestScenario test = new TestScenario();
-    test.addBrowser(BrowserConfig.BROWSER + 0, new Browser.Builder().webPageType(WebPageType.WEBRTC)
-        .browserType(BrowserType.CHROME).scope(BrowserScope.LOCAL).video(videoPath).build());
-    test.addBrowser(BrowserConfig.BROWSER + 1, new Browser.Builder().webPageType(WebPageType.WEBRTC)
-        .browserType(BrowserType.CHROME).scope(BrowserScope.LOCAL).build());
+    test.addBrowser(BROWSER + 0, new Browser.Builder().webPageType(WEBRTC).browserType(CHROME)
+        .scope(LOCAL).video(videoPath).build());
+    test.addBrowser(BROWSER + 1,
+        new Browser.Builder().webPageType(WEBRTC).browserType(CHROME).scope(LOCAL).build());
 
     Collection<Object[]> out = new ArrayList<>();
     for (String s : fakeClientsArray) {
