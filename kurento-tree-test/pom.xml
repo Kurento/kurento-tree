@@ -73,6 +73,9 @@
 	</dependencies>
 
 	<profiles>
+			<profile>
+			<id>integration</id>
+			</profile>
 		<profile>
 			<id>default</id>
 			<activation>
