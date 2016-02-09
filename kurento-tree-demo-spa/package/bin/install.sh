@@ -42,16 +42,16 @@ if [[ "$SYSTEMD" != "other" ]]; then
 else
 	# Create defaults
 	mkdir -p /etc/default
-	cat > /etc/default/kurento-tree-server <<-EOF
-		# Defaults for kurento-tree-server initscript
-		# sourced by /etc/init.d/kurento-tree-server
-		# installed at /etc/default/kurento-tree-server by the maintainer scripts
+	cat > /etc/default/$APP_NAME <<-EOF
+		# Defaults for $APP_NAME initscript
+		# sourced by /etc/init.d/$APP_NAME
+		# installed at /etc/default/$APP_NAME by the maintainer scripts
 
 		#
 		# This is a POSIX shell fragment
 		#
 
-		# Commment next line to disable kurento-tree-server daemon
+		# Commment next line to disable $APP_NAME daemon
 		START_DAEMON=true
 
 		# Whom the daemons should run as
