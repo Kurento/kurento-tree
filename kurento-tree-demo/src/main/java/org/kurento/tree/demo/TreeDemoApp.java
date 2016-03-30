@@ -34,7 +34,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @SpringBootApplication
 public class TreeDemoApp implements WebSocketConfigurer {
 
-  final static String DEFAULT_KTS_WS_URI = "ws://localhost:8890/kurento-tree";
+  final static String DEFAULT_KTS_WS_URI = "wss://localhost:8890/kurento-tree";
 
   @Bean(destroyMethod = "cleanup", initMethod = "init")
   public TreeDemoHandler callHandler() {

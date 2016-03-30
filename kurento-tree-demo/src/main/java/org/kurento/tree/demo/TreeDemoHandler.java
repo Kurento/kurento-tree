@@ -210,8 +210,6 @@ public class TreeDemoHandler extends TextWebSocketHandler {
 
       log.info("Releasing media pipeline");
       kurentoTree.releaseTree(treeId);
-      if (viewers.isEmpty())
-        treeId = null;
       masterUserSession = null;
 
     } else if (viewers.containsKey(sessionId)) {
@@ -221,8 +219,6 @@ public class TreeDemoHandler extends TextWebSocketHandler {
         kurentoTree.removeTreeSink(treeId, sinkId);
       }
       viewers.remove(sessionId);
-      if (viewers.isEmpty())
-        treeId = null;
     }
   }
 
@@ -230,9 +226,9 @@ public class TreeDemoHandler extends TextWebSocketHandler {
       throws IOException {
     String sessionId = session.getId();
     String sinkId = null;
-    if (viewers.containsKey(sessionId))
+    if (viewers.containsKey(sessionId)) {
       sinkId = viewers.get(sessionId).getSinkId();
-    else if (masterUserSession == null
+    } else if (masterUserSession == null
         || !masterUserSession.getSession().getId().equals(sessionId)) {
       log.warn("No active user session found for id " + sessionId + ". Ice candidate discarded: "
           + jsonMessage);
@@ -256,28 +252,32 @@ public class TreeDemoHandler extends TextWebSocketHandler {
         }
         log.debug("Sending notification {}", candidateInfo);
         WebSocketSession session = null;
-        if (!candidateInfo.getTreeId().equals(treeId))
+        if (!candidateInfo.getTreeId().equals(treeId)) {
           throw new TreeException(
               "Unrecognized ice candidate info for current tree " + treeId + " : " + candidateInfo);
+        }
         if (candidateInfo.getSinkId() == null) {
-          if (masterUserSession == null)
+          if (masterUserSession == null) {
             throw new TreeException(
                 "No sender session, so candidate info will be discarded: " + candidateInfo);
+          }
           session = masterUserSession.getSession();
         } else {
           // TODO improve, maybe keep sinkIds and sessionIds in a
           // separate map
-          for (UserSession userSession : viewers.values())
+          for (UserSession userSession : viewers.values()) {
             if (candidateInfo.getSinkId() != null
                 && userSession.getSinkId().equals(candidateInfo.getSinkId())) {
               session = userSession.getSession();
               break;
             }
+          }
         }
-        if (session == null)
+        if (session == null) {
           throw new TreeException(
               "No viewer session for the 'sinkId' from candidate info, will be discarded: "
                   + candidateInfo);
+        }
         JsonObject notification = new JsonObject();
         notification.addProperty("id", ProtocolElements.ICE_CANDIDATE_EVENT);
         notification.addProperty(ProtocolElements.ICE_CANDIDATE,
