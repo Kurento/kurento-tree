@@ -9,7 +9,6 @@
 	</parent>
 
 	<artifactId>kurento-tree</artifactId>
-	<version>6.4.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>Kurento Tree</name>
@@ -48,7 +47,7 @@
 	</developers>
 
 	<properties>
-		<version.kurento-tree>6.3.1-SNAPSHOT</version.kurento-tree>
+		<version.kurento-tree>6.4.1-SNAPSHOT</version.kurento-tree>
 
 		<kurento-tree.scm.url>https://code.kurento.org/kurento-tree</kurento-tree.scm.url>
 		<kurento-tree.scm.connection>ssh://${user.name}@code.kurento.org:12345/kurento-tree</kurento-tree.scm.connection>
