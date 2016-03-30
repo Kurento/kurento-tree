@@ -20,7 +20,7 @@ var name = 'master';
 var that = this;
 
 window.onload = function() {
-	console = new Console('console', console);
+	console = new Console();
 	video = document.getElementById('video');
 }
 
