@@ -51,7 +51,7 @@ public class TreeDemoHandler extends TextWebSocketHandler {
   @Autowired
   private KurentoTreeClient kurentoTree;
 
-  private UserSession masterUserSession;
+  private UserSession presenterUserSession;
 
   private String treeId;
 
@@ -90,14 +90,14 @@ public class TreeDemoHandler extends TextWebSocketHandler {
     log.debug("Incoming message from session '{}': {}", session.getId(), jsonMessage);
 
     switch (jsonMessage.get("id").getAsString()) {
-    case "master":
+    case "presenter":
       try {
-        master(session, jsonMessage);
+        presenter(session, jsonMessage);
       } catch (Throwable t) {
         stop(session);
         log.error(t.getMessage(), t);
         JsonObject response = new JsonObject();
-        response.addProperty("id", "masterResponse");
+        response.addProperty("id", "presenterResponse");
         response.addProperty("response", "rejected");
         response.addProperty("message", t.getMessage());
         session.sendMessage(new TextMessage(response.toString()));
@@ -127,11 +127,11 @@ public class TreeDemoHandler extends TextWebSocketHandler {
     }
   }
 
-  private synchronized void master(WebSocketSession session, JsonObject jsonMessage)
+  private synchronized void presenter(WebSocketSession session, JsonObject jsonMessage)
       throws IOException {
 
-    if (masterUserSession == null) {
-      masterUserSession = new UserSession(session);
+    if (presenterUserSession == null) {
+      presenterUserSession = new UserSession(session);
 
       treeId = kurentoTree.createTree();
 
@@ -140,15 +140,15 @@ public class TreeDemoHandler extends TextWebSocketHandler {
       String sdpAnswer = kurentoTree.setTreeSource(treeId, sdpOffer);
 
       JsonObject response = new JsonObject();
-      response.addProperty("id", "masterResponse");
+      response.addProperty("id", "presenterResponse");
       response.addProperty("response", "accepted");
       response.addProperty("sdpAnswer", sdpAnswer);
-      masterUserSession.sendMessage(response);
+      presenterUserSession.sendMessage(response);
 
     } else {
 
       JsonObject response = new JsonObject();
-      response.addProperty("id", "masterResponse");
+      response.addProperty("id", "presenterResponse");
       response.addProperty("response", "rejected");
       response.addProperty("message",
           "Another user is currently acting as sender. Try again later ...");
@@ -159,7 +159,7 @@ public class TreeDemoHandler extends TextWebSocketHandler {
   private synchronized void viewer(WebSocketSession session, JsonObject jsonMessage)
       throws IOException {
 
-    if (masterUserSession == null) {
+    if (presenterUserSession == null) {
 
       JsonObject response = new JsonObject();
       response.addProperty("id", "viewerResponse");
@@ -200,7 +200,8 @@ public class TreeDemoHandler extends TextWebSocketHandler {
 
   private synchronized void stop(WebSocketSession session) throws IOException {
     String sessionId = session.getId();
-    if (masterUserSession != null && masterUserSession.getSession().getId().equals(sessionId)) {
+    if (presenterUserSession != null
+        && presenterUserSession.getSession().getId().equals(sessionId)) {
 
       for (UserSession viewer : viewers.values()) {
         JsonObject response = new JsonObject();
@@ -210,7 +211,7 @@ public class TreeDemoHandler extends TextWebSocketHandler {
 
       log.info("Releasing media pipeline");
       kurentoTree.releaseTree(treeId);
-      masterUserSession = null;
+      presenterUserSession = null;
 
     } else if (viewers.containsKey(sessionId)) {
 
@@ -228,8 +229,8 @@ public class TreeDemoHandler extends TextWebSocketHandler {
     String sinkId = null;
     if (viewers.containsKey(sessionId)) {
       sinkId = viewers.get(sessionId).getSinkId();
-    } else if (masterUserSession == null
-        || !masterUserSession.getSession().getId().equals(sessionId)) {
+    } else if (presenterUserSession == null
+        || !presenterUserSession.getSession().getId().equals(sessionId)) {
       log.warn("No active user session found for id " + sessionId + ". Ice candidate discarded: "
           + jsonMessage);
       return;
@@ -257,11 +258,11 @@ public class TreeDemoHandler extends TextWebSocketHandler {
               "Unrecognized ice candidate info for current tree " + treeId + " : " + candidateInfo);
         }
         if (candidateInfo.getSinkId() == null) {
-          if (masterUserSession == null) {
+          if (presenterUserSession == null) {
             throw new TreeException(
                 "No sender session, so candidate info will be discarded: " + candidateInfo);
           }
-          session = masterUserSession.getSession();
+          session = presenterUserSession.getSession();
         } else {
           // TODO improve, maybe keep sinkIds and sessionIds in a
           // separate map

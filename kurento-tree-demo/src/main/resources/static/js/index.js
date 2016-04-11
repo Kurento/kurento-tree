@@ -16,7 +16,7 @@
 var ws = new WebSocket('wss://' + location.host + '/call');
 var video;
 var webRtcPeer;
-var name = 'master';
+var name = 'presenter';
 var that = this;
 
 window.onload = function() {
@@ -33,8 +33,8 @@ ws.onmessage = function(message) {
 	console.info('Received message: ' + message.data);
 
 	switch (parsedMessage.id) {
-	case 'masterResponse':
-		masterResponse(parsedMessage);
+	case 'presenterResponse':
+		presenterResponse(parsedMessage);
 		break;
 	case 'viewerResponse':
 		viewerResponse(parsedMessage);
@@ -50,7 +50,7 @@ ws.onmessage = function(message) {
 	}
 }
 
-function masterResponse(message) {
+function presenterResponse(message) {
 	if (message.response != 'accepted') {
 		var errorMsg = message.message ? message.message : 'Unknow error';
 		console.info('Call not accepted for the following reason: ' + errorMsg);
@@ -115,7 +115,7 @@ this.offerToReceiveVideo = function(error, offerSdp, wp){
 	sendMessage(msg);
 }
 
-function master() {
+function presenter() {
 	if (!webRtcPeer) {
 		showSpinner(video);
 
@@ -189,8 +189,8 @@ function sendMessage(message) {
 
 function showSpinner() {
 	for (var i = 0; i < arguments.length; i++) {
-		arguments[i].poster = './img/transparent-1px.png';
-		arguments[i].style.background = 'center transparent url("./img/spinner.gif") no-repeat';
+		arguments[i].poster = './img/transparent.png';
+		arguments[i].style.background = "center transparent url('./img/spinner.gif') no-repeat";
 	}
 }
 

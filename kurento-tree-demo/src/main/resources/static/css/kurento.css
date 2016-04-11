@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2014 Kurento (http://kurento.org/)
+ * (C) Copyright 2014-2016 Kurento (http://kurento.org/)
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Lesser General Public License
@@ -43,20 +43,12 @@ video, #console {
 #console {
 	overflow-y: auto;
 	width: 100%;
-	height: 175px;
+	height: 160px;
 }
 
 #videoContainer {
 	position: absolute;
 	float: left;
-}
-
-#videoBig {
-	width: 640px;
-	height: 480px;
-	top: 0;
-	left: 0;
-	z-index: 1;
 }
 
 div#videoSmall {
@@ -75,4 +67,26 @@ div.dragged {
 	cursor: all-scroll !important;
 	border-color: blue !important;
 	z-index: 10 !important;
+}
+
+.col-xs-2 {
+	text-align: center;
+	margin-top: 10%;
+}
+
+@media (max-width : 768px) {
+	.btn-responsive {
+		padding: 2px 4px;
+		font-size: 80%;
+		line-height: 1;
+		border-radius: 3px;
+	}
+}
+
+@media (min-width : 769px) and (max-width: 992px) {
+	.btn-responsive {
+		padding: 4px 9px;
+		font-size: 90%;
+		line-height: 1.2;
+	}
 }
