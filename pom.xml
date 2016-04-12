@@ -112,6 +112,7 @@
 				<module>kurento-tree-server</module>
 				<module>kurento-tree-demo</module>
 				<module>kurento-tree-demo-spa</module>
+				<module>kurento-tree-demo-embed</module>
 				<module>kurento-tree-test</module>
 			</modules>
 			<build>

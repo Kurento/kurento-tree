@@ -20,6 +20,7 @@ import org.kurento.jsonrpc.JsonRpcException;
 import org.kurento.jsonrpc.message.Request;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
 public class JsonTreeUtils {
@@ -55,7 +56,7 @@ public class JsonTreeUtils {
   @SuppressWarnings("unchecked")
   private static <T> T getConverted(JsonElement paramValue, String property, Class<T> type,
       boolean allowNull) {
-    if (paramValue == null) {
+    if (paramValue == null || paramValue instanceof JsonNull) {
       if (allowNull) {
         return null;
       } else {
