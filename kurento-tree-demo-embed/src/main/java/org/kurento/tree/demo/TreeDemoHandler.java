@@ -264,14 +264,21 @@ public class TreeDemoHandler extends TextWebSocketHandler {
           }
           session = presenterUserSession.getSession();
         } else {
-          // TODO improve, maybe keep sinkIds and sessionIds in a
-          // separate map
-          for (UserSession userSession : viewers.values()) {
-            if (candidateInfo.getSinkId() != null
-                && userSession.getSinkId().equals(candidateInfo.getSinkId())) {
-              session = userSession.getSession();
-              break;
+
+          while (session == null) {
+
+            // TODO improve, maybe keep sinkIds and sessionIds in a
+            // separate map
+            for (UserSession userSession : viewers.values()) {
+              if (candidateInfo.getSinkId() != null && userSession.getSinkId() != null
+                  && userSession.getSinkId().equals(candidateInfo.getSinkId())) {
+                session = userSession.getSession();
+                break;
+              }
             }
+
+            // FIXME Dirty hack to avoid concurrency problem with candidates
+            Thread.sleep(500);
           }
         }
         if (session == null) {
@@ -287,7 +294,11 @@ public class TreeDemoHandler extends TextWebSocketHandler {
             candidateInfo.getIceCandidate().getSdpMLineIndex());
         notification.addProperty(ProtocolElements.ICE_SDP_MID,
             candidateInfo.getIceCandidate().getSdpMid());
-        session.sendMessage(new TextMessage(notification.toString()));
+
+        synchronized (this) {
+          session.sendMessage(new TextMessage(notification.toString()));
+        }
+
       } catch (Exception e) {
         log.warn("Exception while processing ICE candidate and sending notification", e);
       }
