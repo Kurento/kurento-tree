@@ -20,6 +20,7 @@ var name = 'master';
 var that = this;
 
 window.onload = function() {
+	console = new Console();
 	video = document.getElementById('video');
 }
 
@@ -99,3 +100,11 @@ function hideSpinner() {
 		arguments[i].style.background = '';
 	}
 }
+
+/**
+ * Lightbox utility (to display media pipeline image in a modal dialog)
+ */
+$(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
+	event.preventDefault();
+	$(this).ekkoLightbox();
+});

@@ -9,24 +9,22 @@
 <link rel="shortcut icon" href="./img/kurento.png" type="image/png" />
 
 <link rel="stylesheet"
-	href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
-<link rel="stylesheet" href="./css/kurento.css">
-<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-<!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-	  <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
-  <![endif]-->
+	href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+<link rel="stylesheet"
+	href="bower_components/ekko-lightbox/dist/ekko-lightbox.min.css">
+<link rel="stylesheet" href="bower_components/demo-console/index.css">
+<link rel="stylesheet" href="css/kurento.css">
 
-<script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
-<script
-	src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script src="bower_components/jquery/dist/jquery.min.js"></script>
+<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="bower_components/ekko-lightbox/dist/ekko-lightbox.min.js"></script>
+<script src="bower_components/adapter.js/adapter.js"></script>
+<script src="bower_components/demo-console/index.js"></script>
+<script src="bower_components/eventEmitter/EventEmitter.min.js"></script>
 
-<script src="./bower_components/adapter.js/adapter.js"></script>
 <script src="./js/kurento-utils.js"></script>
-<script src="./js/console.js"></script>
 <script src="./js/kurento-jsonrpc.js"></script>
 <script src="./js/KurentoTree.js"></script>
-<script src="./bower_components/eventEmitter/EventEmitter.js"></script>
 <script src="./js/index.js"></script>
 
 <title>Kurento Tree Demo SPA: Video broadcast from 1 to N with
@@ -45,7 +43,7 @@
 					id="bs-example-navbar-collapse-1">
 					<ul class="nav navbar-nav navbar-right">
 						<li><a
-							href="https://github.com/Kurento/kurento-tutorial-java/tree/master/kurento-one2many-call"><span
+							href="https://github.com/Kurento/kurento-tree/tree/master/kurento-tree-demo-spa"><span
 								class="glyphicon glyphicon-file"></span> Source Code</a></li>
 					</ul>
 				</div>
@@ -118,8 +116,11 @@
 							class="glyphicon glyphicon-stop"></span> Stop</a>
 					</div>
 				</div>
-				<br /> <label class="control-label" for="console">Console</label>
-				<div id="console"></div>
+				<br> <label class="control-label" for="console">Console</label><br>
+				<br>
+				<div id="console" class="democonsole">
+					<ul></ul>
+				</div>
 			</div>
 			<div class="col-md-7">
 				<div id="videoBig">
