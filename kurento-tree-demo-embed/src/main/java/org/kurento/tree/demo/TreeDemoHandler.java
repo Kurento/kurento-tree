@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2014 Kurento (http://kurento.org/)
+ * (C) Copyright 2014-2016 Kurento (http://kurento.org/)
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Lesser General Public License
@@ -15,6 +15,7 @@
 package org.kurento.tree.demo;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.kurento.client.IceCandidate;
@@ -31,7 +32,6 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
@@ -39,14 +39,13 @@ import com.google.gson.JsonObject;
  * Protocol handler for 1 to N video call communication.
  *
  * @author Boni Garcia (bgarcia@gsyc.es)
- * @since 5.0.0
+ * @since 6.4.1
  */
 public class TreeDemoHandler extends TextWebSocketHandler {
 
-  private static final Logger log = LoggerFactory.getLogger(TreeDemoHandler.class);
-  private static final Gson gson = new GsonBuilder().create();
+  private final Logger log = LoggerFactory.getLogger(TreeDemoHandler.class);
 
-  private ConcurrentHashMap<String, UserSession> viewers = new ConcurrentHashMap<String, UserSession>();
+  private Map<String, UserSession> viewers = new ConcurrentHashMap<String, UserSession>();
 
   @Autowired
   private KurentoTreeClient kurentoTree;
@@ -85,8 +84,10 @@ public class TreeDemoHandler extends TextWebSocketHandler {
   }
 
   @Override
-  public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-    JsonObject jsonMessage = gson.fromJson(message.getPayload(), JsonObject.class);
+  public void handleTextMessage(WebSocketSession session, TextMessage message)
+      throws TreeException, IOException {
+    JsonObject jsonMessage = new GsonBuilder().create().fromJson(message.getPayload(),
+        JsonObject.class);
     log.debug("Incoming message from session '{}': {}", session.getId(), jsonMessage);
 
     switch (jsonMessage.get("id").getAsString()) {
@@ -100,7 +101,7 @@ public class TreeDemoHandler extends TextWebSocketHandler {
         response.addProperty("id", "presenterResponse");
         response.addProperty("response", "rejected");
         response.addProperty("message", t.getMessage());
-        session.sendMessage(new TextMessage(response.toString()));
+        sendMessage(session, response);
       }
       break;
     case "viewer":
@@ -113,7 +114,7 @@ public class TreeDemoHandler extends TextWebSocketHandler {
         response.addProperty("id", "viewerResponse");
         response.addProperty("response", "rejected");
         response.addProperty("message", t.getMessage());
-        session.sendMessage(new TextMessage(response.toString()));
+        sendMessage(session, response);
       }
       break;
     case "stop":
@@ -143,7 +144,7 @@ public class TreeDemoHandler extends TextWebSocketHandler {
       response.addProperty("id", "presenterResponse");
       response.addProperty("response", "accepted");
       response.addProperty("sdpAnswer", sdpAnswer);
-      presenterUserSession.sendMessage(response);
+      sendMessage(presenterUserSession.getSession(), response);
 
     } else {
 
@@ -152,7 +153,7 @@ public class TreeDemoHandler extends TextWebSocketHandler {
       response.addProperty("response", "rejected");
       response.addProperty("message",
           "Another user is currently acting as sender. Try again later ...");
-      session.sendMessage(new TextMessage(response.toString()));
+      sendMessage(session, response);
     }
   }
 
@@ -166,7 +167,7 @@ public class TreeDemoHandler extends TextWebSocketHandler {
       response.addProperty("response", "rejected");
       response.addProperty("message",
           "No active sender now. Become sender or . Try again later ...");
-      session.sendMessage(new TextMessage(response.toString()));
+      sendMessage(session, response);
 
     } else {
 
@@ -176,7 +177,7 @@ public class TreeDemoHandler extends TextWebSocketHandler {
         response.addProperty("response", "rejected");
         response.addProperty("message",
             "You are already viewing in this session. Use a different browser to add additional viewers.");
-        session.sendMessage(new TextMessage(response.toString()));
+        sendMessage(session, response);
         return;
       }
 
@@ -194,11 +195,12 @@ public class TreeDemoHandler extends TextWebSocketHandler {
       response.addProperty("id", "viewerResponse");
       response.addProperty("response", "accepted");
       response.addProperty("sdpAnswer", sdpAnswer);
-      viewer.sendMessage(response);
+
+      sendMessage(viewer.getSession(), response);
     }
   }
 
-  private synchronized void stop(WebSocketSession session) throws IOException {
+  private synchronized void stop(WebSocketSession session) throws TreeException, IOException {
     String sessionId = session.getId();
     if (presenterUserSession != null
         && presenterUserSession.getSession().getId().equals(sessionId)) {
@@ -206,7 +208,9 @@ public class TreeDemoHandler extends TextWebSocketHandler {
       for (UserSession viewer : viewers.values()) {
         JsonObject response = new JsonObject();
         response.addProperty("id", "stopCommunication");
-        viewer.sendMessage(response);
+
+        sendMessage(viewer.getSession(), response);
+
       }
 
       log.info("Releasing media pipeline");
@@ -265,10 +269,7 @@ public class TreeDemoHandler extends TextWebSocketHandler {
           session = presenterUserSession.getSession();
         } else {
 
-          while (session == null) {
-
-            // TODO improve, maybe keep sinkIds and sessionIds in a
-            // separate map
+          do {
             for (UserSession userSession : viewers.values()) {
               if (candidateInfo.getSinkId() != null && userSession.getSinkId() != null
                   && userSession.getSinkId().equals(candidateInfo.getSinkId())) {
@@ -276,10 +277,15 @@ public class TreeDemoHandler extends TextWebSocketHandler {
                 break;
               }
             }
+            if (session == null) {
+              // Wait to establish WebSocket connection
+              Thread.sleep(500);
 
-            // FIXME Dirty hack to avoid concurrency problem with candidates
-            Thread.sleep(500);
-          }
+            } else {
+              break;
+            }
+          } while (true);
+
         }
         if (session == null) {
           throw new TreeException(
@@ -295,18 +301,30 @@ public class TreeDemoHandler extends TextWebSocketHandler {
         notification.addProperty(ProtocolElements.ICE_SDP_MID,
             candidateInfo.getIceCandidate().getSdpMid());
 
-        synchronized (this) {
-          session.sendMessage(new TextMessage(notification.toString()));
-        }
+        sendMessage(session, notification);
 
       } catch (Exception e) {
         log.warn("Exception while processing ICE candidate and sending notification", e);
       }
     }
+
+  }
+
+  public synchronized void sendMessage(WebSocketSession session, JsonObject jsonObject) {
+    try {
+      TextMessage message = new TextMessage(jsonObject.toString());
+      log.info("Sending message {} in session {}", message.getPayload(), session.getId());
+      session.sendMessage(message);
+
+    } catch (IOException e) {
+      log.error("Exception sending message", e);
+    }
   }
 
   @Override
   public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+    log.info("Closed websocket connection of session {}", session.getId());
+
     stop(session);
   }
 

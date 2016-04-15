@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2014 Kurento (http://kurento.org/)
+ * (C) Copyright 2014-2016 Kurento (http://kurento.org/)
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Lesser General Public License
@@ -14,24 +14,15 @@
  */
 package org.kurento.tree.demo;
 
-import java.io.IOException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
-
-import com.google.gson.JsonObject;
 
 /**
  * User session.
  *
  * @author Boni Garcia (bgarcia@gsyc.es)
- * @since 5.0.0
+ * @since 6.4.1
  */
 public class UserSession {
-
-  private static final Logger log = LoggerFactory.getLogger(UserSession.class);
 
   private WebSocketSession session;
   private String sinkId;
@@ -42,11 +33,6 @@ public class UserSession {
 
   public WebSocketSession getSession() {
     return session;
-  }
-
-  public void sendMessage(JsonObject message) throws IOException {
-    log.debug("Sending message from user with session Id '{}': {}", session.getId(), message);
-    session.sendMessage(new TextMessage(message.toString()));
   }
 
   public void setSinkId(String sinkId) {

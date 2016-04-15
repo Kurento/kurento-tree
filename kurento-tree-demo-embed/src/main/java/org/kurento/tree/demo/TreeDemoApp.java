@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2014 Kurento (http://kurento.org/)
+ * (C) Copyright 2014-2016 Kurento (http://kurento.org/)
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Lesser General Public License
@@ -28,10 +28,11 @@ import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
 /**
- * Video call 1 to N demo (main).
+ * WebRTC broadcasting (tree topology). The kurento-tree-server is embedded (notice that this class
+ * extends KurentoTreeServerApp)
  *
  * @author Boni Garcia (bgarcia@gsyc.es)
- * @since 5.0.0
+ * @since 6.4.1
  */
 public class TreeDemoApp extends KurentoTreeServerApp implements WebSocketConfigurer {
 
@@ -45,7 +46,7 @@ public class TreeDemoApp extends KurentoTreeServerApp implements WebSocketConfig
 
   @Override
   public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-    registry.addHandler(callHandler(), "/call");
+    registry.addHandler(callHandler(), "/tree");
   }
 
   @Bean
