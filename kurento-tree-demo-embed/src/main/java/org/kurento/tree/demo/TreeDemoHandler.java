@@ -88,7 +88,7 @@ public class TreeDemoHandler extends TextWebSocketHandler {
       throws TreeException, IOException {
     JsonObject jsonMessage = new GsonBuilder().create().fromJson(message.getPayload(),
         JsonObject.class);
-    log.debug("Incoming message from session '{}': {}", session.getId(), jsonMessage);
+    log.info("Incoming message from session {}: {}", session.getId(), jsonMessage);
 
     switch (jsonMessage.get("id").getAsString()) {
     case "presenter":
@@ -314,10 +314,13 @@ public class TreeDemoHandler extends TextWebSocketHandler {
     try {
       TextMessage message = new TextMessage(jsonObject.toString());
       log.info("Sending message {} in session {}", message.getPayload(), session.getId());
-      session.sendMessage(message);
+
+      if (session.isOpen()) {
+        session.sendMessage(message);
+      }
 
     } catch (IOException e) {
-      log.error("Exception sending message", e);
+      log.error("Exception sending message {}", jsonObject, e);
     }
   }
 
