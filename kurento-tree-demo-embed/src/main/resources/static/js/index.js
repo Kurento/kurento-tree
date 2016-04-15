@@ -116,6 +116,7 @@ this.offerToReceiveVideo = function(error, offerSdp, wp){
 }
 
 function presenter() {
+	name = 'presenter';
 	if (!webRtcPeer) {
 		showSpinner(video);
 
