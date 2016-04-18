@@ -19,8 +19,8 @@ import org.kurento.tree.server.kms.Kms;
 import org.kurento.tree.server.kms.Pipeline;
 import org.kurento.tree.server.kms.Plumber;
 import org.kurento.tree.server.kms.WebRtc;
+import org.kurento.tree.server.kmsmanager.KmsLoad;
 import org.kurento.tree.server.kmsmanager.KmsManager;
-import org.kurento.tree.server.kmsmanager.KmsManager.KmsLoad;
 import org.kurento.tree.server.kmsmanager.ReserveKmsManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -205,12 +205,13 @@ public class LessLoadedOnlySource2TM extends AbstractNTreeTM implements KmsListe
           leafPipelines.add(pipeline);
 
           Plumber sinkPipelinePlumber = pipeline.createPlumber();
-          sinkPipelinePlumber.setLabel(treeId + "_sinkPlumber");
+          sinkPipelinePlumber.setLabel(treeId + "_sinkPlumber_" + pipeline.getKms().getLabel());
           freeSourcePlumber.link(sinkPipelinePlumber);
 
           for (int i = 0; i < NUM_WEBRTC_FOR_TREE; i++) {
             Plumber leafOutputPlumber = pipeline.createPlumber();
-            leafOutputPlumber.setLabel(treeId + "_plumber" + i);
+            leafOutputPlumber
+                .setLabel(treeId + "_plumber" + i + "_" + pipeline.getKms().getLabel());
 
             sinkPipelinePlumber.connect(leafOutputPlumber);
             this.leafPlumbers.add(sinkPipelinePlumber);

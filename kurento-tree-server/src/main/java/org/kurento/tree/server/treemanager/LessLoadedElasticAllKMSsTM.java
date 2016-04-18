@@ -17,8 +17,8 @@ import org.kurento.tree.server.kms.Kms;
 import org.kurento.tree.server.kms.Pipeline;
 import org.kurento.tree.server.kms.Plumber;
 import org.kurento.tree.server.kms.WebRtc;
+import org.kurento.tree.server.kmsmanager.KmsLoad;
 import org.kurento.tree.server.kmsmanager.KmsManager;
-import org.kurento.tree.server.kmsmanager.KmsManager.KmsLoad;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

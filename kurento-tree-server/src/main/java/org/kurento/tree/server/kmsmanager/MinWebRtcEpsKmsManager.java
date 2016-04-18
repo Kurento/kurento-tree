@@ -1,8 +1,9 @@
 package org.kurento.tree.server.kmsmanager;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.kurento.client.KurentoClient;
 import org.kurento.client.Properties;
@@ -31,10 +32,14 @@ public class MinWebRtcEpsKmsManager extends KmsManager {
   private KmsListener kmsListener;
 
   public MinWebRtcEpsKmsManager() {
+
+    log.info("Requesting new Kms because the app is starting");
+
     addKms();
   }
 
   private void addKms() {
+
     Kms kms;
     if (REAL_KMS) {
       kms = new RealKms(KurentoClient.create(Properties.of("loadPoints", KMS_MAX_WEBRTC)));
@@ -46,7 +51,7 @@ public class MinWebRtcEpsKmsManager extends KmsManager {
     kms.setLabel("Kms" + kmss.size());
     kmss.add(kms);
 
-    log.debug("Added new kms " + kms.getLabel());
+    log.info("Obtained new Kms: " + kms.getLabel());
 
     if (kmsListener != null) {
       kmsListener.kmsAdded(kms);
@@ -59,7 +64,7 @@ public class MinWebRtcEpsKmsManager extends KmsManager {
     return kmss;
   }
 
-  private int countWebRtcsAndPlumbers(Kms kms) {
+  private int calculateLoadPoints(Kms kms) {
     int count = 0;
     for (Pipeline pipeline : kms.getPipelines()) {
       count += pipeline.getWebRtcs().size();
@@ -68,46 +73,56 @@ public class MinWebRtcEpsKmsManager extends KmsManager {
     return count;
   }
 
-  private void checkLoadAndUpdateKmss() {
+  private synchronized void checkLoadAndUpdateKmss() {
 
-    Iterator<Kms> it = kmss.iterator();
+    List<KmsLoad> kmsLoads = kmss.stream().map(kms -> new KmsLoad(kms, calculateLoadPoints(kms)))
+        .collect(Collectors.toList());
 
-    boolean minSpaceKmsFound = false;
+    Collections.sort(kmsLoads);
 
-    List<Kms> removedKmss = new ArrayList<Kms>();
+    Kms selectedKms = null;
+    int selectedKmsIndex = -1;
 
-    while (it.hasNext()) {
-      Kms kms = it.next();
+    for (int i = kmsLoads.size() - 1; i >= 0; i--) {
 
-      int count = countWebRtcsAndPlumbers(kms);
+      KmsLoad kmsLoad = kmsLoads.get(i);
+      double load = kmsLoad.getLoad();
+      Kms kms = kmsLoad.getKms();
 
-      if (count > 0 && KMS_MAX_WEBRTC - count >= KMS_MIN_FREE_SPACE) {
-        minSpaceKmsFound = true;
-      }
+      log.info("Kms " + kms.getLabel() + " has " + load + " load points used");
 
-      if (count == 0 && kmss.size() > 1) {
-        it.remove();
-        removedKmss.add(kms);
-      }
-    }
-
-    if (!minSpaceKmsFound) {
-      if (removedKmss.size() > 0) {
-        Kms kms = removedKmss.remove(0);
-        kmss.add(kms);
-      } else {
-        log.info("Creating new Kms");
-        addKms();
+      if (KMS_MAX_WEBRTC - kmsLoad.getLoad() >= KMS_MIN_FREE_SPACE) {
+        log.info("Kms " + kms.getLabel() + " has enough space");
+        selectedKms = kmsLoad.getKms();
+        selectedKmsIndex = i;
+        break;
       }
     }
 
-    for (Kms kms : removedKmss) {
-      removeKms(kms);
+    if (selectedKms == null) {
+
+      log.info("Requesting new Kms because there isn't a KMS with enough space available");
+      addKms();
+
+    } else {
+
+      log.info("Kms " + selectedKms.getLabel() + "(" + selectedKmsIndex
+          + ") is the most loaded KMS with enough space to create a webRtc");
+
+      for (int i = 0; i < selectedKmsIndex; i++) {
+        KmsLoad kmsLoad = kmsLoads.get(i);
+        Kms kms = kmsLoad.getKms();
+        if (kmsLoad.getLoad() == 0) {
+          log.info("Removing Kms " + kms.getLabel() + " because its load is 0");
+          removeKms(kms);
+        }
+      }
     }
   }
 
   private void removeKms(Kms kms) {
     log.info("Removing Kms {}", kms.getLabel());
+    kmss.remove(kms);
     if (kms instanceof RealKms) {
       KurentoClient client = ((RealKms) kms).getKurentoClient();
       client.destroy();
