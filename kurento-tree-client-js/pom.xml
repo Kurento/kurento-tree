@@ -52,13 +52,14 @@
 				<artifactId>exec-maven-plugin</artifactId>
 				<executions>
 					<execution>
-						<id>bower</id>
-						<phase>generate-sources</phase>
+						<id>exec-bower-install</id>
+						<phase>compile</phase>
 						<goals>
 							<goal>exec</goal>
 						</goals>
 						<configuration>
 							<executable>bower</executable>
+							<workingDirectory>${project.build.directory}/classes</workingDirectory>
 							<arguments>
 								<argument>install</argument>
 								<argument>--allow-root</argument>
@@ -66,17 +67,6 @@
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>
-
-			<plugin>
-				<artifactId>maven-clean-plugin</artifactId>
-				<configuration>
-					<filesets>
-						<fileset>
-							<directory>src/main/resources/static/bower_components</directory>
-						</fileset>
-					</filesets>
-				</configuration>
 			</plugin>
 		</plugins>
 
