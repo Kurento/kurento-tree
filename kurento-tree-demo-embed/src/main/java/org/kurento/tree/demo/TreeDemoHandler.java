@@ -201,28 +201,35 @@ public class TreeDemoHandler extends TextWebSocketHandler {
   }
 
   private synchronized void stop(WebSocketSession session) throws TreeException, IOException {
+
     String sessionId = session.getId();
+
     if (presenterUserSession != null
         && presenterUserSession.getSession().getId().equals(sessionId)) {
 
       for (UserSession viewer : viewers.values()) {
-        JsonObject response = new JsonObject();
-        response.addProperty("id", "stopCommunication");
 
-        sendMessage(viewer.getSession(), response);
+        viewer.setSinkId(null);
 
+        JsonObject message = new JsonObject();
+        message.addProperty("id", "stopCommunication");
+
+        sendMessage(viewer.getSession(), message);
       }
 
       log.info("Releasing media pipeline");
       kurentoTree.releaseTree(treeId);
       presenterUserSession = null;
+      treeId = null;
 
     } else if (viewers.containsKey(sessionId)) {
 
       String sinkId = viewers.get(sessionId).getSinkId();
+
       if (sinkId != null) {
         kurentoTree.removeTreeSink(treeId, sinkId);
       }
+
       viewers.remove(sessionId);
     }
   }
